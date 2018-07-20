@@ -1,3 +1,4 @@
+import os
 import argparse
 import tensorflow as tf
 import numpy as np
@@ -23,14 +24,12 @@ def main(args):
     ####################
     # Define the model #
     ####################
-    images = tf.placeholder(tf.float32, shape=(args.batch_size, args.image_height, args.image_width, 3), name='input')
+    images = tf.placeholder(tf.float32, shape=(None, args.image_height, args.image_width, 3), name='input')
     logits, _ = network_fn(images)
 
     ###########
     # Extract #
     ###########
-
-    embeddings = np.zeros((len(images_list), logits.get_shape()[1].value))
 
     with tf.Session() as sess:
 
@@ -46,19 +45,21 @@ def main(args):
                 batch_images += [image]
             batch_images = np.array(batch_images)
 
-            embeddings[i:i+len(batch_images), :] = sess.run(logits, feed_dict={images: batch_images})
+            embeddings = sess.run(logits, feed_dict={images: batch_images})
 
-    output_path = args.output_path_prefix + args.model_name + '.npy'
-    np.save(output_path, embeddings)
+            for index in range(len(batch_image_paths)):
+                image_name = os.path.basename(batch_image_paths[index])
+                path = os.path.join(args.output_dir, image_name + '.npy')
+                np.save(path, embeddings[index])
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_name', type=str, default='pnasnet_large')
     parser.add_argument('--model_path', type=str, default=r'.\checkpoints\pnasnet-5_large_2017_12_13.ckpt')
-    parser.add_argument('--images_list', type=str, default=r'data\train_images.txt')
-    parser.add_argument('--output_path_prefix', type=str, default=r'data\embeddings_train_')
+    parser.add_argument('--images_list', type=str, default=r'data\test_images.txt')
+    parser.add_argument('--output_dir', type=str, default=r'X:\OpenImages\embeddings\pnasnet_large\test')
     parser.add_argument('--image_width', type=int, default=331)
     parser.add_argument('--image_height', type=int, default=224)
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=32)
     main(parser.parse_args())
