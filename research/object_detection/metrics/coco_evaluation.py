@@ -528,8 +528,7 @@ class CocoMaskEvaluator(object_detection_evaluation.DetectionEvaluator):
     groundtruth_dict = {
         'annotations': self._groundtruth_list,
         'images': [{'id': image_id, 'height': shape[1], 'width': shape[2]}
-                   for image_id, shape in self._image_id_to_mask_shape_map.
-                   iteritems()],
+                   for image_id, shape in self._image_id_to_mask_shape_map.items()],
         'categories': self._categories
     }
     coco_wrapped_groundtruth = coco_tools.COCOWrapper(
@@ -543,7 +542,7 @@ class CocoMaskEvaluator(object_detection_evaluation.DetectionEvaluator):
         include_metrics_per_category=self._include_metrics_per_category)
     mask_metrics.update(mask_per_category_ap)
     mask_metrics = {'DetectionMasks_'+ key: value
-                    for key, value in mask_metrics.iteritems()}
+                    for key, value in mask_metrics.items()}
     return mask_metrics
 
   def get_estimator_eval_metric_ops(self, eval_dict):
