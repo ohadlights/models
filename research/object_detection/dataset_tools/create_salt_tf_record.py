@@ -10,25 +10,26 @@ import tensorflow as tf
 from object_detection.utils import dataset_util
 
 
-def process_list(list_path, output_dir, images_root_dir, image_format):
-    content = [l.strip().split() for l in open(list_path).readlines()]
+def process_list(list_path, output_dir, images_root_dir, image_format, masks_root_dir):
+    content = [l.strip().split(',') for l in open(list_path).readlines()]
 
     writer = tf.python_io.TFRecordWriter(os.path.join(output_dir,
-                                                      os.path.basename(list_path).replace('.txt', '.tfrecord')))
+                                                      os.path.basename(list_path).replace('.csv', '.tfrecord')))
 
     for l in tqdm(content):
         image_id = l[0]
-        boxes = [b.split(',') for b in l[1:]]
 
         image_path = os.path.join(images_root_dir, image_id)
         filename = image_id.encode()
-        image_format = image_format.encode()
 
-        with tf.gfile.GFile(image_path, 'rb') as fid:
-            encoded_jpg = fid.read()
-        encoded_jpg_io = io.BytesIO(encoded_jpg)
+        with tf.gfile.GFile(image_path + '.' + image_format, 'rb') as fid:
+            encoded_png = fid.read()
+        encoded_jpg_io = io.BytesIO(encoded_png)
         image = pil.open(encoded_jpg_io)
         image = np.asarray(image)
+
+        with tf.gfile.GFile(os.path.join(masks_root_dir, image_id + '.' + image_format), 'rb'):
+            encoded_mask = fid.read()
 
         width = int(image.shape[1])
         height = int(image.shape[0])
@@ -42,13 +43,36 @@ def process_list(list_path, output_dir, images_root_dir, image_format):
         classes_text = []  # List of string class name of bounding box (1 per box)
         classes = []  # List of integer class id of bounding box (1 per box)
 
-        for box in boxes:
-            xmins += [float(box[0]) / float(width)]
-            ymins += [float(box[1]) / float(height)]
-            xmaxs += [float(box[2]) / float(width)]
-            ymaxs += [float(box[3]) / float(height)]
+        data = l[1].split()
+        if len(data) > 0:
 
-            classes_text += [b'face']
+            xs = []
+            ys = []
+
+            for i in range(0, len(data), 2):
+                first_index = int(data[i]) - 1
+                last_index = int(data[i]) + int(data[i+1]) - 2
+
+                xmin = first_index // height
+                ymin = first_index - height * xmin
+
+                xmax = last_index // height
+                ymax = last_index - height * xmax
+
+                xs += [xmin, xmax]
+                ys += [ymin, ymax]
+
+            xmin = min(xs)
+            ymin = min(ys)
+            xmax = max(xs)
+            ymax = max(ys)
+
+            xmins += [float(xmin) / float(width)]
+            ymins += [float(ymin) / float(height)]
+            xmaxs += [float(xmax) / float(width)]
+            ymaxs += [float(ymax) / float(height)]
+
+            classes_text += [b'salt']
             classes += [1]
 
         tf_example = tf.train.Example(features=tf.train.Features(feature={
@@ -56,14 +80,15 @@ def process_list(list_path, output_dir, images_root_dir, image_format):
             'image/width': dataset_util.int64_feature(width),
             'image/filename': dataset_util.bytes_feature(filename),
             'image/source_id': dataset_util.bytes_feature(filename),
-            'image/encoded': dataset_util.bytes_feature(encoded_jpg),
-            'image/format': dataset_util.bytes_feature(image_format),
+            'image/encoded': dataset_util.bytes_feature(encoded_png),
+            'image/format': dataset_util.bytes_feature(image_format.encode()),
             'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
             'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
             'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
             'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
             'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
             'image/object/class/label': dataset_util.int64_list_feature(classes),
+            'image/object/mask': dataset_util.bytes_feature(encoded_mask),
         }))
 
         writer.write(tf_example.SerializeToString())
@@ -75,11 +100,13 @@ def main(args):
     process_list(list_path=args.train_list,
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
-                 image_format=args.image_format)
+                 image_format=args.image_format,
+                 masks_root_dir=args.mask_root_dir)
     process_list(list_path=args.val_list,
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
-                 image_format=args.image_format)
+                 image_format=args.image_format,
+                 masks_root_dir=args.mask_root_dir)
 
 
 if __name__ == '__main__':
@@ -88,5 +115,6 @@ if __name__ == '__main__':
     parser.add_argument('--val_list', required=True)
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--images_root_dir', required=True)
-    parser.add_argument('--image_format', default='jpeg', help='options: jpeg/png')
+    parser.add_argument('--mask_root_dir', required=True)
+    parser.add_argument('--image_format', default='png', help='options: jpeg/png')
     main(parser.parse_args())
