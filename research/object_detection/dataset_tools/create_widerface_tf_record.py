@@ -1,6 +1,7 @@
 import os
 import argparse
 import io
+import contextlib2
 
 from tqdm import tqdm
 import PIL.Image as pil
@@ -8,6 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 from object_detection.utils import dataset_util
+from object_detection.dataset_tools import tf_record_creation_util
 
 
 def create_example(raw_sample, images_root_dir, image_format):
@@ -65,14 +67,17 @@ def create_example(raw_sample, images_root_dir, image_format):
 def process_list(list_path, output_dir, images_root_dir, image_format, num_shards):
     content = [l.strip().split() for l in open(list_path).readlines()]
 
-    writer = tf.python_io.TFRecordWriter(os.path.join(output_dir,
-                                                      os.path.basename(list_path).replace('.txt', '.tfrecord')))
+    output_filebase = os.path.join(output_dir, os.path.basename(list_path).replace('.txt', '.tfrecord'))
 
-    for l in tqdm(content):
-        tf_example = create_example(l, images_root_dir=images_root_dir, image_format=image_format)
-        writer.write(tf_example.SerializeToString())
+    with contextlib2.ExitStack() as tf_record_close_stack:
 
-    writer.close()
+        output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
+            tf_record_close_stack, output_filebase, num_shards)
+
+        for index, l in tqdm(enumerate(content), total=len(content)):
+            tf_example = create_example(l, images_root_dir=images_root_dir, image_format=image_format)
+            output_shard_index = index % num_shards
+            output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
 
 
 def main(args):
