@@ -90,7 +90,7 @@ def main(args):
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
                  image_format=args.image_format,
-                 num_shards=args.num_shards)
+                 num_shards=1)
 
 
 if __name__ == '__main__':
