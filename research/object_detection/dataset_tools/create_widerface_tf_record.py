@@ -2,6 +2,7 @@ import os
 import argparse
 import io
 import contextlib2
+import random
 
 from tqdm import tqdm
 import PIL.Image as pil
@@ -64,10 +65,16 @@ def create_example(raw_sample, images_root_dir, image_format):
     return tf_example
 
 
-def process_list(list_path, output_dir, images_root_dir, image_format, num_shards):
+def process_list(list_path, output_dir, images_root_dir, image_format, num_shards, reduce):
     content = [l.strip().split() for l in open(list_path).readlines()]
+    if reduce > 0:
+        random.seed(42)
+        random.shuffle(content)
+        random.seed(None)
+        cut_index = int(len(content) * reduce)
+        content = content[:cut_index]
 
-    output_filebase = os.path.join(output_dir, os.path.basename(list_path).replace('.txt', '.tfrecord'))
+    output_filebase = os.path.join(output_dir, os.path.basename(list_path).replace('.txt', '_{}.tfrecord'.format(reduce)))
 
     with contextlib2.ExitStack() as tf_record_close_stack:
 
@@ -85,12 +92,14 @@ def main(args):
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
                  image_format=args.image_format,
-                 num_shards=args.num_shards)
+                 num_shards=args.num_shards,
+                 reduce=args.reduce)
     process_list(list_path=args.val_list,
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
                  image_format=args.image_format,
-                 num_shards=1)
+                 num_shards=1,
+                 reduce=args.reduce)
 
 
 if __name__ == '__main__':
@@ -100,5 +109,6 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--images_root_dir', required=True)
     parser.add_argument('--image_format', default='png', help='options: jpeg/png')
-    parser.add_argument('--num_shards', default=10)
+    parser.add_argument('--num_shards', type=int, default=10)
+    parser.add_argument('--reduce', type=float, default=0.0)
     main(parser.parse_args())
