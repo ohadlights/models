@@ -24,125 +24,173 @@ from absl import app as absl_app
 from absl import flags
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
-from official.utils.flags import core as flags_core
 from official.utils.logs import logger
 from official.resnet import resnet_run_loop
-
+from official.resnet import imagenet_preprocessing
 from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_fn
 
-_HEIGHT = 32
-_WIDTH = 32
+_DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
-_DEFAULT_IMAGE_BYTES = _HEIGHT * _WIDTH * _NUM_CHANNELS
-# The record is the image plus a one-byte label
-_RECORD_BYTES = _DEFAULT_IMAGE_BYTES + 1
-_NUM_CLASSES = 10
-_NUM_DATA_FILES = 5
 
-_NUM_IMAGES = {
-    'train': 50000,
-    'validation': 10000,
-}
+_NUM_TRAIN_FILES = 100
+_NUM_IMAGES_PER_EPOCH = 250000
+_SHUFFLE_BUFFER = 10000
 
-DATASET_NAME = 'CIFAR-10'
+DATASET_NAME = 'OpenImages'
 
 
 ###############################################################################
 # Data processing
 ###############################################################################
 def get_filenames(is_training, data_dir):
-    """Returns a list of filenames."""
-    data_dir = os.path.join(data_dir, 'cifar-10-batches-bin')
-
-    assert os.path.exists(data_dir), (
-        'Run cifar10_download_and_extract.py first to download and extract the '
-        'CIFAR-10 data.')
-
+    """Return filenames for dataset."""
     if is_training:
         return [
-            os.path.join(data_dir, 'data_batch_%d.bin' % i)
-            for i in range(1, _NUM_DATA_FILES + 1)
-        ]
+            os.path.join(data_dir, 'top_10_images_train_single.tfrecord-%05d-of-%05d' % (i, _NUM_TRAIN_FILES))
+            for i in range(_NUM_TRAIN_FILES)]
     else:
-        return [os.path.join(data_dir, 'test_batch.bin')]
+        return [os.path.join(data_dir, 'top_10_images_val_single.tfrecord-00000-of-00001')]
+
+
+def _parse_example_proto(example_serialized):
+    """Parses an Example proto containing a training example of an image.
+
+    The output of the build_image_data.py image preprocessing script is a dataset
+    containing serialized Example protocol buffers. Each Example proto contains
+    the following fields (values are included as examples):
+
+      image/height: 462
+      image/width: 581
+      image/colorspace: 'RGB'
+      image/channels: 3
+      image/class/label: 615
+      image/class/synset: 'n03623198'
+      image/class/text: 'knee pad'
+      image/object/bbox/xmin: 0.1
+      image/object/bbox/xmax: 0.9
+      image/object/bbox/ymin: 0.2
+      image/object/bbox/ymax: 0.6
+      image/object/bbox/label: 615
+      image/format: 'JPEG'
+      image/filename: 'ILSVRC2012_val_00041207.JPEG'
+      image/encoded: <JPEG encoded string>
+
+    Args:
+      example_serialized: scalar Tensor tf.string containing a serialized
+        Example protocol buffer.
+
+    Returns:
+      image_buffer: Tensor tf.string containing the contents of a JPEG file.
+      label: Tensor tf.int32 containing the label.
+      bbox: 3-D float Tensor of bounding boxes arranged [1, num_boxes, coords]
+        where each coordinate is [0, 1) and the coordinates are arranged as
+        [ymin, xmin, ymax, xmax].
+    """
+    # Dense features in Example proto.
+    feature_map = {
+        'image/encoded': tf.FixedLenFeature([], dtype=tf.string,
+                                            default_value=''),
+        'image/class/label': tf.FixedLenFeature([], dtype=tf.int64,
+                                                default_value=-1),
+        'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
+                                               default_value=''),
+    }
+    # sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
+    # # Sparse features in Example proto.
+    # feature_map.update(
+    #     {k: sparse_float32 for k in ['image/object/bbox/xmin',
+    #                                  'image/object/bbox/ymin',
+    #                                  'image/object/bbox/xmax',
+    #                                  'image/object/bbox/ymax']})
+
+    features = tf.parse_single_example(example_serialized, feature_map)
+    label = tf.cast(features['image/class/label'], dtype=tf.int32)
+
+    xmin = tf.expand_dims([0.], 0)
+    ymin = tf.expand_dims([0.], 0)
+    xmax = tf.expand_dims([1.], 0)
+    ymax = tf.expand_dims([1.], 0)
+
+    # Note that we impose an ordering of (y, x) just to make life difficult.
+    bbox = tf.concat([ymin, xmin, ymax, xmax], 0)
+
+    # Force the variable number of bounding boxes into the shape
+    # [1, num_boxes, coords].
+    bbox = tf.expand_dims(bbox, 0)
+    bbox = tf.transpose(bbox, [0, 2, 1])
+
+    return features['image/encoded'], label, bbox
 
 
 def parse_record(raw_record, is_training, dtype):
-    """Parse CIFAR-10 image and label from a raw record."""
-    # Convert bytes to a vector of uint8 that is record_bytes long.
-    record_vector = tf.decode_raw(raw_record, tf.uint8)
+    """Parses a record containing a training example of an image.
 
-    # The first byte represents the label, which we convert from uint8 to int32
-    # and then to one-hot.
-    label = tf.cast(record_vector[0], tf.int32)
+      The input record is parsed into a label and image, and the image is passed
+      through preprocessing steps (cropping, flipping, and so on).
 
-    # The remaining bytes after the label represent the image, which we reshape
-    # from [depth * height * width] to [depth, height, width].
-    depth_major = tf.reshape(record_vector[1:_RECORD_BYTES],
-                             [_NUM_CHANNELS, _HEIGHT, _WIDTH])
+      Args:
+        raw_record: scalar Tensor tf.string containing a serialized
+          Example protocol buffer.
+        is_training: A boolean denoting whether the input is for training.
+        dtype: data type to use for images/features.
 
-    # Convert from [depth, height, width] to [height, width, depth], and cast as
-    # float32.
-    image = tf.cast(tf.transpose(depth_major, [1, 2, 0]), tf.float32)
+      Returns:
+        Tuple with processed image tensor and one-hot-encoded label tensor.
+      """
+    image_buffer, label, bbox = _parse_example_proto(raw_record)
 
-    image = preprocess_image(image, is_training)
+    image = imagenet_preprocessing.preprocess_image(
+        image_buffer=image_buffer,
+        bbox=bbox,
+        output_height=_DEFAULT_IMAGE_SIZE,
+        output_width=_DEFAULT_IMAGE_SIZE,
+        num_channels=_NUM_CHANNELS,
+        is_training=is_training)
     image = tf.cast(image, dtype)
 
     return image, label
 
 
-def preprocess_image(image, is_training):
-    """Preprocess a single image of layout [height, width, depth]."""
-    if is_training:
-        # Resize the image to add four extra pixels on each side.
-        image = tf.image.resize_image_with_crop_or_pad(
-            image, _HEIGHT + 8, _WIDTH + 8)
-
-        # Randomly crop a [_HEIGHT, _WIDTH] section of the image.
-        image = tf.random_crop(image, [_HEIGHT, _WIDTH, _NUM_CHANNELS])
-
-        # Randomly flip the image horizontally.
-        image = tf.image.random_flip_left_right(image)
-
-    # Subtract off the mean and divide by the variance of the pixels.
-    image = tf.image.per_image_standardization(image)
-    return image
-
-
-def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None,
-             dtype=tf.float32):
+def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None, dtype=tf.float32):
     """Input function which provides batches for train or eval.
 
-    Args:
-      is_training: A boolean denoting whether the input is for training.
-      data_dir: The directory containing the input data.
-      batch_size: The number of samples per batch.
-      num_epochs: The number of epochs to repeat the dataset.
-      num_gpus: The number of gpus used for training.
-      dtype: Data type to use for images/features
+  Args:
+    is_training: A boolean denoting whether the input is for training.
+    data_dir: The directory containing the input data.
+    batch_size: The number of samples per batch.
+    num_epochs: The number of epochs to repeat the dataset.
+    num_gpus: The number of gpus used for training.
+    dtype: Data type to use for images/features
 
-    Returns:
-      A dataset that can be used for iteration.
-    """
+  Returns:
+    A dataset that can be used for iteration.
+  """
     filenames = get_filenames(is_training, data_dir)
-    dataset = tf.data.FixedLengthRecordDataset(filenames, _RECORD_BYTES)
+    dataset = tf.data.TFRecordDataset(filenames, num_parallel_reads=5)
+
+    if is_training:
+        # Shuffle the input files
+        dataset = dataset.shuffle(buffer_size=_NUM_TRAIN_FILES)
+
+    # Convert to individual records.
+    # cycle_length = 10 means 10 files will be read and deserialized in parallel.
+    # This number is low enough to not cause too much contention on small systems
+    # but high enough to provide the benefits of parallelization. You may want
+    # to increase this number if you have a large number of CPU cores.
+    # dataset = dataset.apply(tf.contrib.data.parallel_interleave(
+    #     tf.data.TFRecordDataset, cycle_length=10))
 
     return resnet_run_loop.process_record_dataset(
         dataset=dataset,
         is_training=is_training,
         batch_size=batch_size,
-        shuffle_buffer=_NUM_IMAGES['train'],
+        shuffle_buffer=_SHUFFLE_BUFFER,
         parse_record_fn=parse_record,
         num_epochs=num_epochs,
         num_gpus=num_gpus,
-        examples_per_epoch=_NUM_IMAGES['train'] if is_training else None,
+        examples_per_epoch=_NUM_IMAGES_PER_EPOCH if is_training else None,
         dtype=dtype
     )
-
-
-def get_synth_input_fn(dtype):
-    return resnet_run_loop.get_synth_input_fn(
-        _HEIGHT, _WIDTH, _NUM_CHANNELS, _NUM_CLASSES, dtype=dtype)
 
 
 ###############################################################################
@@ -151,16 +199,13 @@ def get_synth_input_fn(dtype):
 def run_training(flags_obj):
     """Run ResNet ImageNet training and eval loop.
 
-    Args:
+      Args:
         flags_obj: An object containing parsed flag values.
-    """
-    input_function = (flags_obj.use_synthetic_data and
-                      get_synth_input_fn(flags_core.get_tf_dtype(flags_obj)) or
-                      input_fn)
+      """
 
     resnet_run_loop.resnet_main(
-        flags_obj, imagenet_model_fn, input_function, DATASET_NAME,
-        shape=[_HEIGHT, _WIDTH, _NUM_CHANNELS])
+        flags_obj, imagenet_model_fn, input_fn, DATASET_NAME,
+        shape=[_DEFAULT_IMAGE_SIZE, _DEFAULT_IMAGE_SIZE, _NUM_CHANNELS])
 
 
 def main(_):
