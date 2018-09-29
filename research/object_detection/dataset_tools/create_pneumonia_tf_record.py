@@ -2,7 +2,7 @@ import os
 import argparse
 import io
 import contextlib2
-import random
+import cv2
 
 from tqdm import tqdm
 import PIL.Image as pil
@@ -12,6 +12,9 @@ import pydicom
 
 from object_detection.utils import dataset_util
 from object_detection.dataset_tools import tf_record_creation_util
+
+
+_TEMP_IMAGE_PATH = r'd:\temp\image.png'
 
 
 def create_example(raw_sample, images_root_dir, image_format):
@@ -24,7 +27,9 @@ def create_example(raw_sample, images_root_dir, image_format):
     dcm_data = pydicom.read_file(dcm_file)
 
     image = dcm_data.pixel_array
-    encoded_jpg = image.tobytes()
+    cv2.imwrite(_TEMP_IMAGE_PATH, image)
+    with tf.gfile.GFile(_TEMP_IMAGE_PATH, 'rb') as fid:
+        encoded_png = fid.read()
 
     width = 1024
     height = 1024
@@ -54,7 +59,7 @@ def create_example(raw_sample, images_root_dir, image_format):
         'image/width': dataset_util.int64_feature(width),
         'image/filename': dataset_util.bytes_feature(filename),
         'image/source_id': dataset_util.bytes_feature(filename),
-        'image/encoded': dataset_util.bytes_feature(encoded_jpg),
+        'image/encoded': dataset_util.bytes_feature(encoded_png),
         'image/format': dataset_util.bytes_feature(image_format.encode()),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
         'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
@@ -87,12 +92,14 @@ def main(args):
     process_list(list_path=args.train_list,
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
-                 image_format=args.image_format)
+                 image_format=args.image_format,
+                 num_shards=args.num_shards_train)
     if args.val_list:
         process_list(list_path=args.val_list,
                      output_dir=args.output_dir,
                      images_root_dir=args.images_root_dir,
-                     image_format=args.image_format)
+                     image_format=args.image_format,
+                     num_shards=args.num_shards_val)
     else:
         print('No val list was provided')
 
@@ -103,5 +110,7 @@ if __name__ == '__main__':
     parser.add_argument('--val_list')
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--images_root_dir', required=True)
-    parser.add_argument('--image_format', default='jpeg', help='options: jpeg/png')
+    parser.add_argument('--image_format', default='png', help='options: jpeg/png')
+    parser.add_argument('--num_shards_train', type=int, default=25)
+    parser.add_argument('--num_shards_val', type=int, default=5)
     main(parser.parse_args())
