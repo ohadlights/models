@@ -11,10 +11,13 @@ from research.object_detection.dataset_tools import tf_record_creation_util
 
 def create_example(raw_sample, images_root_dir, image_format, class_descriptions):
     image_id = raw_sample[0]
-    label_id = raw_sample[1]
+    label_ids = raw_sample[1:]
 
-    class_label = class_descriptions[label_id][0]
-    class_text = class_descriptions[label_id][1]
+    class_labels = []
+    classes_text = []
+    for label_id in label_ids:
+        class_labels += [class_descriptions[label_id][0]]
+        classes_text += [class_descriptions[label_id][1].encode()]
 
     image_path = os.path.join(images_root_dir, image_id) + '.jpg'
     filename = image_id.encode()
@@ -32,15 +35,15 @@ def create_example(raw_sample, images_root_dir, image_format, class_descriptions
         'image/source_id': dataset_util.bytes_feature(filename),
         'image/encoded': dataset_util.bytes_feature(encoded_jpg),
         'image/format': dataset_util.bytes_feature(image_format.encode()),
-        'image/class/text': dataset_util.bytes_feature(class_text.encode()),
-        'image/class/label': dataset_util.int64_feature(class_label),
+        'image/class/text': dataset_util.bytes_list_feature(classes_text),
+        'image/class/label': dataset_util.int64_list_feature(class_labels),
     }))
 
     return tf_example
 
 
 def process_list(list_path, output_dir, images_root_dir, image_format, num_shards, class_descriptions):
-    content = [l.strip().split() for l in open(list_path).readlines()]
+    content = [l.strip().split() for l in open(list_path).readlines()][:100000]
 
     output_filebase = os.path.join(output_dir, os.path.basename(list_path).replace('.txt', '.tfrecord'))
 
@@ -80,5 +83,5 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--images_root_dir', required=True)
     parser.add_argument('--image_format', default='jpeg', help='options: jpeg/png')
-    parser.add_argument('--num_shards', type=int, default=500)
+    parser.add_argument('--num_shards', type=int, default=10)
     main(parser.parse_args())

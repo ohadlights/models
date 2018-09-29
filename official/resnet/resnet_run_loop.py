@@ -39,6 +39,8 @@ from official.utils.misc import distribution_utils
 from official.utils.misc import model_helpers
 # pylint: enable=g-bad-import-order
 
+from official.resnet.imagenet_main import _NUM_CLASSES
+
 
 ################################################################################
 # Functions for input processing.
@@ -263,8 +265,8 @@ def resnet_model_fn(features, labels, mode, model_class,
   logits = tf.cast(logits, tf.float32)
 
   predictions = {
-      'classes': tf.argmax(logits, axis=1),
-      'probabilities': tf.nn.softmax(logits, name='softmax_tensor')
+      'classes': logits,
+      'probabilities': tf.nn.sigmoid(logits, name='sigmoid_tensor')
   }
 
   if mode == tf.estimator.ModeKeys.PREDICT:
@@ -277,8 +279,7 @@ def resnet_model_fn(features, labels, mode, model_class,
         })
 
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
-  cross_entropy = tf.losses.sparse_softmax_cross_entropy(
-      logits=logits, labels=labels)
+  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
 
   # Create a tensor named cross_entropy for logging purposes.
   tf.identity(cross_entropy, name='cross_entropy')
@@ -349,19 +350,20 @@ def resnet_model_fn(features, labels, mode, model_class,
   else:
     train_op = None
 
-  accuracy = tf.metrics.accuracy(labels, predictions['classes'])
-  accuracy_top_5 = tf.metrics.mean(tf.nn.in_top_k(predictions=logits,
-                                                  targets=labels,
-                                                  k=5,
-                                                  name='top_5_op'))
-  metrics = {'accuracy': accuracy,
-             'accuracy_top_5': accuracy_top_5}
+  labels_32 = tf.cast(tf.round(labels), dtype=tf.int32)
+  probabilities_32 = tf.cast(tf.round(predictions['probabilities']), dtype=tf.int32)
+  accuracy = tf.reduce_mean(tf.cast(tf.equal(probabilities_32, labels_32), tf.float32))
+
+  def print_some(gt, prob, acc):
+      print('{}\n{}\n{}'.format(gt, prob, acc))
+      return acc
+  accuracy = tf.py_func(print_some, [labels_32, probabilities_32, accuracy], tf.float32)
+
+  metrics = {}
 
   # Create a tensor named train_accuracy for logging purposes
-  tf.identity(accuracy[1], name='train_accuracy')
-  tf.identity(accuracy_top_5[1], name='train_accuracy_top_5')
-  tf.summary.scalar('train_accuracy', accuracy[1])
-  tf.summary.scalar('train_accuracy_top_5', accuracy_top_5[1])
+  tf.identity(accuracy, name='train_accuracy')
+  tf.summary.scalar('train_accuracy', accuracy)
 
   return tf.estimator.EstimatorSpec(
       mode=mode,

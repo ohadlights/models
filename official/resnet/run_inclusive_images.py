@@ -23,17 +23,18 @@ import os
 from absl import app as absl_app
 from absl import flags
 import tensorflow as tf  # pylint: disable=g-bad-import-order
+import numpy as np
 
 from official.utils.logs import logger
 from official.resnet import resnet_run_loop
 from official.resnet import imagenet_preprocessing
-from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_fn
+from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_fn, _NUM_CLASSES
 
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
 
 _NUM_TRAIN_FILES = 500
-_NUM_IMAGES_PER_EPOCH = 1250000
+_NUM_IMAGES_PER_EPOCH = 100000
 _SHUFFLE_BUFFER = 10000
 
 DATASET_NAME = 'OpenImages'
@@ -90,10 +91,8 @@ def _parse_example_proto(example_serialized):
     feature_map = {
         'image/encoded': tf.FixedLenFeature([], dtype=tf.string,
                                             default_value=''),
-        'image/class/label': tf.FixedLenFeature([], dtype=tf.int64,
-                                                default_value=-1),
-        'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
-                                               default_value=''),
+        'image/class/label': tf.FixedLenFeature([], dtype=tf.int64),
+        'image/class/text': tf.FixedLenFeature([], dtype=tf.string),
     }
     # sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
     # # Sparse features in Example proto.
@@ -103,8 +102,19 @@ def _parse_example_proto(example_serialized):
     #                                  'image/object/bbox/xmax',
     #                                  'image/object/bbox/ymax']})
 
+    # example_serialized = tf.Print(example_serialized, [example_serialized], 'example_serialized... ')
+
     features = tf.parse_single_example(example_serialized, feature_map)
     label = tf.cast(features['image/class/label'], dtype=tf.int32)
+
+    def create_label_vector(labels):
+        label_vector = np.zeros(_NUM_CLASSES, dtype=np.float32)
+        # for l in labels:
+        #     label_vector[l] = 1.0
+        label_vector[labels] = 1.0
+        # print(label_vector)
+        return label_vector
+    label = tf.py_func(create_label_vector, [label], tf.float32)
 
     xmin = tf.expand_dims([0.], 0)
     ymin = tf.expand_dims([0.], 0)
