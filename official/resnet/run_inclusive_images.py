@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Runs a ResNet model on the CIFAR-10 dataset."""
+"""Train for multi-label classification."""
 
 from __future__ import absolute_import
 from __future__ import division
