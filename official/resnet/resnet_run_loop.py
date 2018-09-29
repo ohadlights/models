@@ -354,10 +354,10 @@ def resnet_model_fn(features, labels, mode, model_class,
   probabilities_32 = tf.cast(tf.round(predictions['probabilities']), dtype=tf.int32)
   accuracy = tf.reduce_mean(tf.cast(tf.equal(probabilities_32, labels_32), tf.float32))
 
-  def print_some(gt, prob, acc):
-      print('{}\n{}\n{}'.format(gt, prob, acc))
-      return acc
-  accuracy = tf.py_func(print_some, [labels_32, probabilities_32, accuracy], tf.float32)
+  # def print_some(gt, prob, acc):
+  #     print('{}\n{}\n{}'.format(gt, prob, acc))
+  #     return acc
+  # accuracy = tf.py_func(print_some, [labels_32, probabilities_32, accuracy], tf.float32)
 
   metrics = {}
 

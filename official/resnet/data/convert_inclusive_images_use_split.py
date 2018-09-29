@@ -43,7 +43,7 @@ def create_example(raw_sample, images_root_dir, image_format, class_descriptions
 
 
 def process_list(list_path, output_dir, images_root_dir, image_format, num_shards, class_descriptions):
-    content = [l.strip().split() for l in open(list_path).readlines()][:100000]
+    content = [l.strip().split() for l in open(list_path).readlines()]
 
     output_filebase = os.path.join(output_dir, os.path.basename(list_path).replace('.txt', '.tfrecord'))
 
@@ -83,5 +83,5 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--images_root_dir', required=True)
     parser.add_argument('--image_format', default='jpeg', help='options: jpeg/png')
-    parser.add_argument('--num_shards', type=int, default=10)
+    parser.add_argument('--num_shards', type=int, default=500)
     main(parser.parse_args())
