@@ -32,8 +32,8 @@ from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
 
-_NUM_TRAIN_FILES = 100
-_NUM_IMAGES_PER_EPOCH = 250000
+_NUM_TRAIN_FILES = 500
+_NUM_IMAGES_PER_EPOCH = 1250000
 _SHUFFLE_BUFFER = 10000
 
 DATASET_NAME = 'OpenImages'
