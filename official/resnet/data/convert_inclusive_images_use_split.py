@@ -71,7 +71,7 @@ def main(args):
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
                  image_format=args.image_format,
-                 num_shards=1,
+                 num_shards=5,
                  class_descriptions=class_descriptions)
 
 
@@ -83,5 +83,5 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--images_root_dir', required=True)
     parser.add_argument('--image_format', default='jpeg', help='options: jpeg/png')
-    parser.add_argument('--num_shards', type=int, default=500)
+    parser.add_argument('--num_shards', type=int, default=250)
     main(parser.parse_args())

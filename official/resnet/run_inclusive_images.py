@@ -33,8 +33,9 @@ from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
 
-_NUM_TRAIN_FILES = 10
-_NUM_IMAGES_PER_EPOCH = 100000
+_NUM_TRAIN_FILES = 250
+_NUM_VAL_FILES = 5
+_NUM_IMAGES_PER_EPOCH = 1500000
 _SHUFFLE_BUFFER = 10000
 
 DATASET_NAME = 'OpenImages'
@@ -47,10 +48,12 @@ def get_filenames(is_training, data_dir):
     """Return filenames for dataset."""
     if is_training:
         return [
-            os.path.join(data_dir, 'top_10_images_train_multi.tfrecord-%05d-of-%05d' % (i, _NUM_TRAIN_FILES))
+            os.path.join(data_dir, 'top_100_images_train_multi.tfrecord-%05d-of-%05d' % (i, _NUM_TRAIN_FILES))
             for i in range(_NUM_TRAIN_FILES)]
     else:
-        return [os.path.join(data_dir, 'top_10_images_train_multi.tfrecord-00000-of-00001')]
+        return [
+            os.path.join(data_dir, 'top_100_images_train_multi.tfrecord-%05d-of-%05d' % (i, _NUM_VAL_FILES))
+            for i in range(_NUM_TRAIN_FILES)]
 
 
 def _parse_example_proto(example_serialized):
