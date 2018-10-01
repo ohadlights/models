@@ -29,6 +29,7 @@ import os
 # pylint: disable=g-bad-import-order
 from absl import flags
 import tensorflow as tf
+import numpy as np
 
 from official.resnet import resnet_model
 from official.utils.flags import core as flags_core
@@ -39,7 +40,38 @@ from official.utils.misc import distribution_utils
 from official.utils.misc import model_helpers
 # pylint: enable=g-bad-import-order
 
-from official.resnet.imagenet_main import _NUM_CLASSES
+
+################################################################################
+# Losses
+################################################################################
+def adjusted_loss(logits, labels):
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
+    return tf.reduce_mean(loss)
+
+
+################################################################################
+# Metrics
+################################################################################
+def calc_f2_score(preds, labels):
+    def _calc_f2(pred, label):
+        num_found = np.count_nonzero(pred)
+        num_relevant = np.count_nonzero(pred * label)
+        if num_found == 0 and num_relevant == 0:
+            precision = 1
+        elif num_found == 0 and num_relevant > 0:
+            precision = 0
+        else:
+            precision = num_relevant / num_found
+
+        num_to_recall = np.count_nonzero(label)
+        num_found = np.count_nonzero(label * pred)
+        recall = 1 if num_to_recall == 0 else num_found / num_to_recall
+
+        f2 = (5 * precision * recall) / (4 * precision + recall)
+
+        return precision, recall, f2
+
+    return tf.py_func(_calc_f2, [preds, labels], [tf.float64, tf.float64, tf.float64])
 
 
 ################################################################################
@@ -279,7 +311,7 @@ def resnet_model_fn(features, labels, mode, model_class,
         })
 
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
-  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
+  cross_entropy = adjusted_loss(logits=logits, labels=labels)
 
   # Create a tensor named cross_entropy for logging purposes.
   tf.identity(cross_entropy, name='cross_entropy')
@@ -352,18 +384,19 @@ def resnet_model_fn(features, labels, mode, model_class,
 
   labels_32 = tf.cast(tf.round(labels), dtype=tf.int32)
   probabilities_32 = tf.cast(tf.round(predictions['probabilities']), dtype=tf.int32)
-  accuracy = tf.reduce_mean(tf.cast(tf.equal(probabilities_32, labels_32), tf.float32))
-
-  # def print_some(gt, prob, acc):
-  #     print('{}\n{}\n{}'.format(gt, prob, acc))
-  #     return acc
-  # accuracy = tf.py_func(print_some, [labels_32, probabilities_32, accuracy], tf.float32)
+  precision, recall, f2 = calc_f2_score(probabilities_32, labels_32)
 
   metrics = {}
 
-  # Create a tensor named train_accuracy for logging purposes
-  tf.identity(accuracy, name='train_accuracy')
-  tf.summary.scalar('train_accuracy', accuracy)
+  # Create a tensors for logging purposes
+  tf.identity(precision, name='train_precision')
+  tf.summary.scalar('train_precision', precision)
+
+  tf.identity(recall, name='train_recall')
+  tf.summary.scalar('train_recall', recall)
+
+  tf.identity(recall, name='train_f2_score')
+  tf.summary.scalar('train_f2_score', recall)
 
   return tf.estimator.EstimatorSpec(
       mode=mode,

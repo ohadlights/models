@@ -61,7 +61,7 @@ def _parse_example_proto(example_serialized):
     feature_map = {
         'image/encoded': tf.FixedLenFeature([], dtype=tf.string, default_value=''),
         'image/class/label': tf.VarLenFeature(dtype=tf.int64),
-        #'image/class/text': tf.VarLenFeature(tf.string),
+        # 'image/class/text': tf.VarLenFeature(tf.string),
     }
 
     features = tf.parse_single_example(example_serialized, feature_map)
