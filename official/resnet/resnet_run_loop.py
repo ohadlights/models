@@ -540,9 +540,10 @@ def resnet_main(
 
     benchmark_logger.log_evaluation_result(eval_results)
 
-    if model_helpers.past_stop_threshold(
-        flags_obj.stop_threshold, eval_results['accuracy']):
-      break
+    ##### Add eval metrics!!!!!
+    # if model_helpers.past_stop_threshold(
+    #     flags_obj.stop_threshold, eval_results['accuracy']):
+    #   break
 
   if flags_obj.export_dir is not None:
     # Exports a saved model for the given classifier.
