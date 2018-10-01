@@ -398,8 +398,8 @@ def resnet_model_fn(features, labels, mode, model_class,
   tf.identity(recall, name='train_recall')
   tf.summary.scalar('train_recall', recall)
 
-  tf.identity(recall, name='train_f2_score')
-  tf.summary.scalar('train_f2_score', recall)
+  tf.identity(f2, name='train_f2_score')
+  tf.summary.scalar('train_f2_score', f2)
 
   return tf.estimator.EstimatorSpec(
       mode=mode,
