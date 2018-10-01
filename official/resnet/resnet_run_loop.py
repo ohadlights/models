@@ -46,10 +46,20 @@ from official.utils.misc import model_helpers
 ################################################################################
 def adjusted_loss(logits, labels):
     loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
-    def adjust_loss(los, label):
-        return los + los * label * 2
-    loss = tf.py_func(adjust_loss, [loss, labels], tf.float32)
-    return tf.reduce_mean(loss)
+    # def adjust_loss(los, label):
+        # return los + los * label * 2
+    # loss = tf.py_func(adjust_loss, [loss, labels], tf.float32)
+    loss_for_recall = loss * labels * 10
+    total_loss = loss + loss_for_recall
+    # def print_loss(l, lfr, tl):
+    #     print('new...')
+    #     print('num non zero in lfr: {}'.format(np.count_nonzero(lfr)))
+    #     print(l)
+    #     print(lfr)
+    #     print(tl)
+    #     return tl
+    # total_loss = tf.py_func(print_loss, [loss, loss_for_recall, total_loss], tf.float32)
+    return tf.reduce_mean(total_loss)
 
 
 ################################################################################
