@@ -100,10 +100,12 @@ def calc_f2_score(preds, labels):
 
 
 def f2_score_metric(preds, labels):
-    P, update_op1 = tf.metrics.precision(preds, labels)
-    R, update_op2 = tf.metrics.recall(preds, labels)
+    P, update_precision = tf.metrics.precision(preds, labels)
+    R, update_recall = tf.metrics.recall(preds, labels)
     eps = 1e-5
-    return 5 * (P * R) / (4 * P + R + eps), tf.group(update_op1, update_op2)
+    with tf.control_dependencies([P, update_precision, R, update_recall]):
+        score = 5 * (P * R) / (4 * P + R + eps)
+    return score, tf.group(update_precision, update_recall)
 
 
 ################################################################################
