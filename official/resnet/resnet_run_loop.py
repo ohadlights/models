@@ -29,6 +29,7 @@ import os
 # pylint: disable=g-bad-import-order
 from absl import flags
 import tensorflow as tf
+from tensorflow.python.ops import array_ops
 import numpy as np
 
 from official.resnet import resnet_model
@@ -44,21 +45,32 @@ from official.utils.misc import model_helpers
 ################################################################################
 # Losses
 ################################################################################
-def adjusted_loss(logits, labels):
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
-    # def adjust_loss(los, label):
-        # return los + los * label * 2
-    # loss = tf.py_func(adjust_loss, [loss, labels], tf.float32)
-    loss_for_recall = loss * labels * 10
-    total_loss = loss + loss_for_recall
-    # def print_loss(l, lfr, tl):
-    #     print('new...')
-    #     print('num non zero in lfr: {}'.format(np.count_nonzero(lfr)))
-    #     print(l)
-    #     print(lfr)
-    #     print(tl)
-    #     return tl
-    # total_loss = tf.py_func(print_loss, [loss, loss_for_recall, total_loss], tf.float32)
+def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
+    # loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
+    # loss_for_recall = loss * labels * 10
+    # total_loss = loss + loss_for_recall
+
+    # Focal loss
+
+    sigmoid_p = tf.nn.sigmoid(logits)
+    zeros = array_ops.zeros_like(sigmoid_p, dtype=sigmoid_p.dtype)
+
+    # For poitive prediction, only need consider front part loss, back part is 0;
+    # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
+    pos_p_sub = array_ops.where(labels > zeros, labels - sigmoid_p, zeros)
+
+    # For negative prediction, only need consider back part loss, front part is 0;
+    # target_tensor > zeros <=> z=1, so negative coefficient = 0.
+    neg_p_sub = array_ops.where(labels > zeros, zeros, sigmoid_p)
+    per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * tf.log(tf.clip_by_value(sigmoid_p, 1e-8, 1.0)) \
+                          - (1 - alpha) * (neg_p_sub ** gamma) * tf.log(tf.clip_by_value(1.0 - sigmoid_p, 1e-8, 1.0))
+
+    # More weight to recall
+
+    loss_for_recall = per_entry_cross_ent * labels * 5
+
+    total_loss = per_entry_cross_ent + loss_for_recall
+
     return tf.reduce_mean(total_loss)
 
 
