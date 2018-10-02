@@ -99,6 +99,13 @@ def calc_f2_score(preds, labels):
     return tf.py_func(_calc_f2, [preds, labels], [tf.float64, tf.float64, tf.float64])
 
 
+def f2_score_metric(preds, labels):
+    P, update_op1 = tf.contrib.metrics.streaming_precision(preds, labels)
+    R, update_op2 = tf.contrib.metrics.streaming_recall(preds, labels)
+    eps = 1e-5
+    return 5 * (P * R) / (4 * P + R + eps), tf.group(update_op1, update_op2)
+
+
 ################################################################################
 # Functions for input processing.
 ################################################################################
@@ -411,8 +418,6 @@ def resnet_model_fn(features, labels, mode, model_class,
   probabilities_32 = tf.cast(tf.round(predictions['probabilities']), dtype=tf.int32)
   precision, recall, f2 = calc_f2_score(probabilities_32, labels_32)
 
-  metrics = {}
-
   # Create a tensors for logging purposes
   tf.identity(precision, name='train_precision')
   tf.summary.scalar('train_precision', precision)
@@ -422,6 +427,11 @@ def resnet_model_fn(features, labels, mode, model_class,
 
   tf.identity(f2, name='train_f2_score')
   tf.summary.scalar('train_f2_score', f2)
+
+  f2_score_m = f2_score_metric(preds=probabilities_32, labels=labels_32)
+  metrics = {'accuracy': f2_score_m}
+  tf.identity(f2_score_m[0], name='train_f2_metric')
+  tf.summary.scalar('train_f2_metric', f2_score_m[0])
 
   return tf.estimator.EstimatorSpec(
       mode=mode,
