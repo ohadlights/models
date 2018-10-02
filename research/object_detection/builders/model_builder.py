@@ -56,6 +56,7 @@ SSD_FEATURE_EXTRACTOR_CLASS_MAP = {
     'ssd_mobilenet_v1_fpn': SSDMobileNetV1FpnFeatureExtractor,
     'ssd_mobilenet_v1_ppn': SSDMobileNetV1PpnFeatureExtractor,
     'ssd_mobilenet_v2': SSDMobileNetV2FeatureExtractor,
+    'ssd_resnet18_v1_fpn': ssd_resnet_v1_fpn.SSDResnet18V1FpnFeatureExtractor,
     'ssd_resnet50_v1_fpn': ssd_resnet_v1_fpn.SSDResnet50V1FpnFeatureExtractor,
     'ssd_resnet101_v1_fpn': ssd_resnet_v1_fpn.SSDResnet101V1FpnFeatureExtractor,
     'ssd_resnet152_v1_fpn': ssd_resnet_v1_fpn.SSDResnet152V1FpnFeatureExtractor,
@@ -77,6 +78,8 @@ FASTER_RCNN_FEATURE_EXTRACTOR_CLASS_MAP = {
     frcnn_inc_res.FasterRCNNInceptionResnetV2FeatureExtractor,
     'faster_rcnn_inception_v2':
     frcnn_inc_v2.FasterRCNNInceptionV2FeatureExtractor,
+    'faster_rcnn_resnet18':
+    frcnn_resnet_v1.FasterRCNNResnet18FeatureExtractor,
     'faster_rcnn_resnet50':
     frcnn_resnet_v1.FasterRCNNResnet50FeatureExtractor,
     'faster_rcnn_resnet101':

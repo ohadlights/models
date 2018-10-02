@@ -197,6 +197,61 @@ class _SSDResnetV1FpnFeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
     return feature_maps
 
 
+class SSDResnet18V1FpnFeatureExtractor(_SSDResnetV1FpnFeatureExtractor):
+  """SSD Resnet18 V1 FPN feature extractor."""
+
+  def __init__(self,
+               is_training,
+               depth_multiplier,
+               min_depth,
+               pad_to_multiple,
+               conv_hyperparams_fn,
+               fpn_min_level=3,
+               fpn_max_level=7,
+               reuse_weights=None,
+               use_explicit_padding=False,
+               use_depthwise=False,
+               override_base_feature_extractor_hyperparams=False):
+    """SSD Resnet18 V1 FPN feature extractor based on Resnet v1 architecture.
+
+    Args:
+      is_training: whether the network is in training mode.
+      depth_multiplier: float depth multiplier for feature extractor.
+        UNUSED currently.
+      min_depth: minimum feature extractor depth. UNUSED Currently.
+      pad_to_multiple: the nearest multiple to zero pad the input height and
+        width dimensions to.
+      conv_hyperparams_fn: A function to construct tf slim arg_scope for conv2d
+        and separable_conv2d ops in the layers that are added on top of the
+        base feature extractor.
+      fpn_min_level: the minimum level in feature pyramid networks.
+      fpn_max_level: the maximum level in feature pyramid networks.
+      reuse_weights: Whether to reuse variables. Default is None.
+      use_explicit_padding: Whether to use explicit padding when extracting
+        features. Default is False. UNUSED currently.
+      use_depthwise: Whether to use depthwise convolutions. UNUSED currently.
+      override_base_feature_extractor_hyperparams: Whether to override
+        hyperparameters of the base feature extractor with the one from
+        `conv_hyperparams_fn`.
+    """
+    super(SSDResnet18V1FpnFeatureExtractor, self).__init__(
+        is_training,
+        depth_multiplier,
+        min_depth,
+        pad_to_multiple,
+        conv_hyperparams_fn,
+        resnet_v1.resnet_v1_18,
+        'resnet_v1_18',
+        'fpn',
+        fpn_min_level,
+        fpn_max_level,
+        reuse_weights=reuse_weights,
+        use_explicit_padding=use_explicit_padding,
+        use_depthwise=use_depthwise,
+        override_base_feature_extractor_hyperparams=
+        override_base_feature_extractor_hyperparams)
+
+
 class SSDResnet50V1FpnFeatureExtractor(_SSDResnetV1FpnFeatureExtractor):
   """SSD Resnet50 V1 FPN feature extractor."""
 
