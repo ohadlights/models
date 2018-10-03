@@ -92,7 +92,8 @@ def calc_f2_score(preds, labels):
         num_found = np.count_nonzero(label * pred)
         recall = 1 if num_to_recall == 0 else num_found / num_to_recall
 
-        f2 = (5 * precision * recall) / (4 * precision + recall)
+        eps = 1e-5
+        f2 = (5 * precision * recall) / (4 * precision + recall + eps)
 
         return precision, recall, f2
 
