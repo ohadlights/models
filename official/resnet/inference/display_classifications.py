@@ -1,3 +1,4 @@
+import os
 import argparse
 
 import cv2
@@ -25,21 +26,25 @@ def main(args):
     with tf.Session() as sess:
         tf.train.Saver().restore(sess, args.model_path)
 
-        image = cv2.imread(r"\\ger\ec\proj\ha\RSG\FacePublicDatasets\OpenImages\images\train_320\000002b66c9c498e.jpg")
+        for file in os.listdir(r'\\ger\ec\proj\ha\RSG\FacePublicDatasets\OpenImages\images\train_320'):
 
-        image_infer = cv2.resize(image, (224, 224))
-        image_infer = np.array([image_infer])
+            image = cv2.imread(os.path.join(r'\\ger\ec\proj\ha\RSG\FacePublicDatasets\OpenImages\images\train_320', file))
 
-        result = sess.run(predictions, feed_dict={inputs: image_infer})[0]
+            image_infer = cv2.resize(image, (224, 224))
+            image_infer = np.array([image_infer])
 
-        result = np.round(result)
+            result = sess.run(predictions, feed_dict={inputs: image_infer})[0]
 
-        for i in range(num_classes):
-            if result[i] == 1.0:
-                print(classes_desc[i])
+            result = np.round(result)
 
-        cv2.imshow('view', image)
-        cv2.waitKey(0)
+            found = []
+            for i in range(num_classes):
+                if result[i] == 1.0:
+                    found += [classes_desc[i]]
+            print(', '.join(found))
+
+            cv2.imshow('view', image)
+            cv2.waitKey(0)
 
 
 if __name__ == '__main__':
