@@ -32,7 +32,6 @@ from official.resnet import resnet_run_loop
 
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
-_NUM_CLASSES = 100
 
 _NUM_IMAGES = {
     'train': 1281167,
@@ -203,7 +202,7 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None,
 
 def get_synth_input_fn(dtype):
   return resnet_run_loop.get_synth_input_fn(
-      _DEFAULT_IMAGE_SIZE, _DEFAULT_IMAGE_SIZE, _NUM_CHANNELS, _NUM_CLASSES,
+      _DEFAULT_IMAGE_SIZE, _DEFAULT_IMAGE_SIZE, _NUM_CHANNELS, 1001,
       dtype=dtype)
 
 
@@ -213,7 +212,7 @@ def get_synth_input_fn(dtype):
 class ImagenetModel(resnet_model.Model):
   """Model class with appropriate defaults for Imagenet data."""
 
-  def __init__(self, resnet_size, data_format=None, num_classes=_NUM_CLASSES,
+  def __init__(self, resnet_size, num_classes, data_format=None,
                resnet_version=resnet_model.DEFAULT_VERSION,
                dtype=resnet_model.DEFAULT_DTYPE):
     """These are the parameters that work for Imagenet data.
@@ -317,7 +316,8 @@ def imagenet_model_fn(features, labels, mode, params):
       loss_scale=params['loss_scale'],
       loss_filter_fn=None,
       dtype=params['dtype'],
-      fine_tune=params['fine_tune']
+      fine_tune=params['fine_tune'],
+      num_classes=params['num_classes']
   )
 
 

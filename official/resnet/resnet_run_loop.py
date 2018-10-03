@@ -111,7 +111,7 @@ def f2_score_metric(preds, labels):
 ################################################################################
 # Functions for input processing.
 ################################################################################
-def process_record_dataset(dataset, is_training, batch_size, shuffle_buffer,
+def process_record_dataset(dataset, is_training, batch_size, shuffle_buffer, num_classes,
                            parse_record_fn, num_epochs=1, num_gpus=None,
                            examples_per_epoch=None, dtype=tf.float32):
   """Given a Dataset with raw records, return an iterator over the records.
@@ -161,7 +161,7 @@ def process_record_dataset(dataset, is_training, batch_size, shuffle_buffer,
   # batch_size is almost always much greater than the number of CPU cores.
   dataset = dataset.apply(
       tf.contrib.data.map_and_batch(
-          lambda value: parse_record_fn(value, is_training, dtype),
+          lambda value: parse_record_fn(value, is_training, dtype, num_classes),
           batch_size=batch_size,
           num_parallel_batches=1,
           drop_remainder=False))
@@ -271,7 +271,7 @@ def learning_rate_with_decay(
   return learning_rate_fn
 
 
-def resnet_model_fn(features, labels, mode, model_class,
+def resnet_model_fn(features, labels, mode, model_class, num_classes,
                     resnet_size, weight_decay, learning_rate_fn, momentum,
                     data_format, resnet_version, loss_scale,
                     loss_filter_fn=None, dtype=resnet_model.DEFAULT_DTYPE,
@@ -320,7 +320,7 @@ def resnet_model_fn(features, labels, mode, model_class,
   # Checks that features/images have same data type being used for calculations.
   assert features.dtype == dtype
 
-  model = model_class(resnet_size, data_format, resnet_version=resnet_version,
+  model = model_class(resnet_size, num_classes=num_classes, data_format=data_format, resnet_version=resnet_version,
                       dtype=dtype)
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
@@ -498,7 +498,8 @@ def resnet_main(
           'resnet_version': int(flags_obj.resnet_version),
           'loss_scale': flags_core.get_loss_scale(flags_obj),
           'dtype': flags_core.get_tf_dtype(flags_obj),
-          'fine_tune': flags_obj.fine_tune
+          'fine_tune': flags_obj.fine_tune,
+          'num_classes': flags_obj.num_classes,
       })
 
   run_params = {
@@ -508,6 +509,7 @@ def resnet_main(
       'resnet_version': flags_obj.resnet_version,
       'synthetic_data': flags_obj.use_synthetic_data,
       'train_epochs': flags_obj.train_epochs,
+      'num_classes': flags_obj.num_classes,
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'
@@ -528,7 +530,8 @@ def resnet_main(
             flags_obj.batch_size, flags_core.get_num_gpus(flags_obj)),
         num_epochs=num_epochs,
         num_gpus=flags_core.get_num_gpus(flags_obj),
-        dtype=flags_core.get_tf_dtype(flags_obj))
+        dtype=flags_core.get_tf_dtype(flags_obj),
+        num_classes=flags_obj.num_classes)
 
   def input_fn_eval():
     return input_function(
@@ -536,7 +539,8 @@ def resnet_main(
         batch_size=distribution_utils.per_device_batch_size(
             flags_obj.batch_size, flags_core.get_num_gpus(flags_obj)),
         num_epochs=1,
-        dtype=flags_core.get_tf_dtype(flags_obj))
+        dtype=flags_core.get_tf_dtype(flags_obj),
+        num_classes=flags_obj.num_classes)
 
   if flags_obj.eval_only or not flags_obj.train_epochs:
     # If --eval_only is set, perform a single loop with zero train epochs.

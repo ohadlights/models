@@ -28,7 +28,7 @@ import numpy as np
 from official.utils.logs import logger
 from official.resnet import resnet_run_loop
 from official.resnet import imagenet_preprocessing
-from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_fn, _NUM_CLASSES
+from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_fn
 
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
@@ -56,7 +56,7 @@ def get_filenames(is_training, data_dir):
             for i in range(_NUM_TRAIN_FILES)]
 
 
-def _parse_example_proto(example_serialized):
+def _parse_example_proto(example_serialized, num_classes):
 
     feature_map = {
         'image/encoded': tf.FixedLenFeature([], dtype=tf.string, default_value=''),
@@ -68,7 +68,7 @@ def _parse_example_proto(example_serialized):
     label = features['image/class/label'].values
 
     def create_label_vector(labels):
-        label_vector = np.zeros(_NUM_CLASSES, dtype=np.float32)
+        label_vector = np.zeros(num_classes, dtype=np.float32)
         for l in labels:
             label_vector[l] = 1.0
         return label_vector
@@ -90,7 +90,7 @@ def _parse_example_proto(example_serialized):
     return features['image/encoded'], label, bbox
 
 
-def parse_record(raw_record, is_training, dtype):
+def parse_record(raw_record, is_training, dtype, num_classes):
     """Parses a record containing a training example of an image.
 
       The input record is parsed into a label and image, and the image is passed
@@ -105,7 +105,7 @@ def parse_record(raw_record, is_training, dtype):
       Returns:
         Tuple with processed image tensor and one-hot-encoded label tensor.
       """
-    image_buffer, label, bbox = _parse_example_proto(raw_record)
+    image_buffer, label, bbox = _parse_example_proto(raw_record, num_classes)
 
     image = imagenet_preprocessing.preprocess_image(
         image_buffer=image_buffer,
@@ -119,7 +119,7 @@ def parse_record(raw_record, is_training, dtype):
     return image, label
 
 
-def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None, dtype=tf.float32):
+def input_fn(is_training, data_dir, batch_size, num_classes, num_epochs=1, num_gpus=None, dtype=tf.float32):
     """Input function which provides batches for train or eval.
 
   Args:
@@ -157,7 +157,8 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None, dty
         num_epochs=num_epochs,
         num_gpus=num_gpus,
         examples_per_epoch=_NUM_IMAGES_PER_EPOCH if is_training else None,
-        dtype=dtype
+        dtype=dtype,
+        num_classes=num_classes
     )
 
 
