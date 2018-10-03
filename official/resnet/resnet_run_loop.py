@@ -50,7 +50,9 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
     # loss_for_recall = loss * labels * 10
     # total_loss = loss + loss_for_recall
 
-    # Focal loss
+    ##############
+    # Focal loss #
+    ##############
 
     sigmoid_p = tf.nn.sigmoid(logits)
     zeros = array_ops.zeros_like(sigmoid_p, dtype=sigmoid_p.dtype)
@@ -62,12 +64,57 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
     # For negative prediction, only need consider back part loss, front part is 0;
     # target_tensor > zeros <=> z=1, so negative coefficient = 0.
     neg_p_sub = array_ops.where(labels > zeros, zeros, sigmoid_p)
+
     per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * tf.log(tf.clip_by_value(sigmoid_p, 1e-8, 1.0)) \
                           - (1 - alpha) * (neg_p_sub ** gamma) * tf.log(tf.clip_by_value(1.0 - sigmoid_p, 1e-8, 1.0))
 
-    # More weight to recall
+    ###################################################
+    # Reset most of the negative losses for balancing #
+    ###################################################
 
-    loss_for_recall = per_entry_cross_ent * labels * 5
+    def reset_losses(loss_vector, truth_vector):
+        for i in range(loss_vector.shape[0]):
+            batch_loss_vector = loss_vector[i]
+            batch_truth_vector = truth_vector[i]
+
+            num_positives = np.count_nonzero(batch_truth_vector)
+            num_negatives = num_positives * 3
+
+            # print('pos/neg: {}/{}'.format(num_positives, num_negatives))
+
+            negative_indexes = np.where(batch_truth_vector == 0)[0]
+
+            # print('negative indexes: {}'.format(negative_indexes))
+
+            sorted_indexes = batch_loss_vector.argsort()[::-1]
+
+            # print('sorted indexes: {}'.format(sorted_indexes))
+
+            sorted_indexes_without_positive_indexes = np.isin(sorted_indexes, negative_indexes)
+            sorted_indexes_without_positive_indexes = np.where(sorted_indexes_without_positive_indexes)[0]
+            sorted_indexes_without_positive_indexes = sorted_indexes[sorted_indexes_without_positive_indexes]
+
+            # print('sorted_indexes_without_positive_indexes = {}'.format(sorted_indexes_without_positive_indexes))
+
+            sorted_indexes_to_reset = sorted_indexes_without_positive_indexes[num_negatives:]
+
+            loss_vector[i][sorted_indexes_to_reset] = 0
+
+            # print('non zero in loss vector: {}'.format(np.count_nonzero(batch_loss_vector)))
+
+        return loss_vector
+
+    per_entry_cross_ent = tf.py_func(reset_losses, [per_entry_cross_ent, labels], tf.float32)
+
+    #########################
+    # More weight to recall #
+    #########################
+
+    loss_for_recall = per_entry_cross_ent * labels * 0.0
+
+    ##############
+    # Sum losses #
+    ##############
 
     total_loss = per_entry_cross_ent + loss_for_recall
 
