@@ -47,6 +47,7 @@ def define_image(data_format=True):
             "built for CPU or GPU."))
     key_flags.append("data_format")
 
-  flags.DEFINE_integer('num_classes', 10, 'The number of classes.')
+  flags.DEFINE_integer('num_classes', -1, 'The number of classes.')
+  flags.DEFINE_integer('num_images_per_epoch', -1, 'The number of images per epoch')
 
   return key_flags

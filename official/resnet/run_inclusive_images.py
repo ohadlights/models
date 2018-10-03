@@ -35,7 +35,6 @@ _NUM_CHANNELS = 3
 
 _NUM_TRAIN_FILES = 250
 _NUM_VAL_FILES = 5
-_NUM_IMAGES_PER_EPOCH = 1500000
 _SHUFFLE_BUFFER = 10000
 
 DATASET_NAME = 'OpenImages'
@@ -48,11 +47,11 @@ def get_filenames(is_training, data_dir):
     """Return filenames for dataset."""
     if is_training:
         return [
-            os.path.join(data_dir, 'top_100_images_train_multi.tfrecord-%05d-of-%05d' % (i, _NUM_TRAIN_FILES))
+            os.path.join(data_dir, 'train.tfrecord-%05d-of-%05d' % (i, _NUM_TRAIN_FILES))
             for i in range(_NUM_TRAIN_FILES)]
     else:
         return [
-            os.path.join(data_dir, 'top_100_images_train_multi.tfrecord-%05d-of-%05d' % (i, _NUM_VAL_FILES))
+            os.path.join(data_dir, 'val.tfrecord-%05d-of-%05d' % (i, _NUM_VAL_FILES))
             for i in range(_NUM_TRAIN_FILES)]
 
 
@@ -119,7 +118,8 @@ def parse_record(raw_record, is_training, dtype, num_classes):
     return image, label
 
 
-def input_fn(is_training, data_dir, batch_size, num_classes, num_epochs=1, num_gpus=None, dtype=tf.float32):
+def input_fn(is_training, data_dir, batch_size, num_classes, num_images_per_epoch,
+             num_epochs=1, num_gpus=None, dtype=tf.float32):
     """Input function which provides batches for train or eval.
 
   Args:
@@ -156,7 +156,7 @@ def input_fn(is_training, data_dir, batch_size, num_classes, num_epochs=1, num_g
         parse_record_fn=parse_record,
         num_epochs=num_epochs,
         num_gpus=num_gpus,
-        examples_per_epoch=_NUM_IMAGES_PER_EPOCH if is_training else None,
+        examples_per_epoch=num_images_per_epoch if is_training else None,
         dtype=dtype,
         num_classes=num_classes
     )
