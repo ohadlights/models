@@ -52,7 +52,7 @@ def get_filenames(is_training, data_dir):
     else:
         return [
             os.path.join(data_dir, 'val.tfrecord-%05d-of-%05d' % (i, _NUM_VAL_FILES))
-            for i in range(_NUM_TRAIN_FILES)]
+            for i in range(_NUM_VAL_FILES)]
 
 
 def _parse_example_proto(example_serialized, num_classes):
