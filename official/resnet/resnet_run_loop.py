@@ -95,7 +95,7 @@ def calc_f2_score(preds, labels):
         eps = 1e-5
         f2 = (5 * precision * recall) / (4 * precision + recall + eps)
 
-        return precision, recall, f2
+        return float(precision), float(recall), float(f2)
 
     return tf.py_func(_calc_f2, [preds, labels], [tf.float64, tf.float64, tf.float64])
 
