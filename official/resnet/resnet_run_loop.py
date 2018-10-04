@@ -73,6 +73,8 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
     ###################################################
 
     def reset_losses(loss_vector, truth_vector):
+        fix_vector = np.ones(loss_vector.shape, dtype=np.float32)
+
         for i in range(loss_vector.shape[0]):
             batch_loss_vector = loss_vector[i]
             batch_truth_vector = truth_vector[i]
@@ -98,13 +100,16 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
 
             sorted_indexes_to_reset = sorted_indexes_without_positive_indexes[num_negatives:]
 
-            loss_vector[i][sorted_indexes_to_reset] = 0
+            fix_vector[i][sorted_indexes_to_reset] = 0
 
             # print('non zero in loss vector: {}'.format(np.count_nonzero(batch_loss_vector)))
 
-        return loss_vector
+        return fix_vector
 
-    per_entry_cross_ent = tf.py_func(reset_losses, [per_entry_cross_ent, labels], tf.float32)
+    fixing_vector = tf.py_func(reset_losses, [per_entry_cross_ent, labels], tf.float32)
+    per_entry_cross_ent = per_entry_cross_ent * fixing_vector
+
+    # per_entry_cross_ent = tf.Print(per_entry_cross_ent, [per_entry_cross_ent], 'per_entry_cross_ent...')
 
     #########################
     # More weight to recall #
