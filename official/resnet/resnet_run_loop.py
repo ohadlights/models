@@ -115,7 +115,7 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
     # More weight to recall #
     #########################
 
-    loss_for_recall = per_entry_cross_ent * labels * tf.cast((tf.shape(per_entry_cross_ent)[1] / 2), dtype=tf.float32)
+    loss_for_recall = per_entry_cross_ent * labels * tf.cast((tf.shape(per_entry_cross_ent)[1] / 10), dtype=tf.float32)
 
     ##############
     # Sum losses #
