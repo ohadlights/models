@@ -116,9 +116,9 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
     # Sum losses #
     ##############
 
-    total_loss = per_entry_cross_ent + loss_for_recall
+    total_loss = tf.reduce_sum(per_entry_cross_ent + loss_for_recall)
 
-    return tf.reduce_mean(total_loss) * 10
+    return total_loss
 
 
 ################################################################################
