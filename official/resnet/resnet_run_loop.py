@@ -106,8 +106,8 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
 
         return fix_vector
 
-    fixing_vector = tf.py_func(reset_losses, [per_entry_cross_ent, labels], tf.float32)
-    per_entry_cross_ent = per_entry_cross_ent * fixing_vector
+    # fixing_vector = tf.py_func(reset_losses, [per_entry_cross_ent, labels], tf.float32)
+    # per_entry_cross_ent = per_entry_cross_ent * fixing_vector
 
     # per_entry_cross_ent = tf.Print(per_entry_cross_ent, [per_entry_cross_ent], 'per_entry_cross_ent...')
 
@@ -115,13 +115,13 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
     # More weight to recall #
     #########################
 
-    loss_for_recall = per_entry_cross_ent * labels * 0.0
+    loss_for_recall = per_entry_cross_ent * labels * 5.0
 
     ##############
     # Sum losses #
     ##############
 
-    total_loss = tf.reduce_sum(per_entry_cross_ent + loss_for_recall)
+    total_loss = tf.reduce_mean(per_entry_cross_ent + loss_for_recall) * 10
 
     return total_loss
 
