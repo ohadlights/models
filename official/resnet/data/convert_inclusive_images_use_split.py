@@ -59,7 +59,7 @@ def process_list(list_path, output_dir, images_root_dir, image_format, num_shard
 
 
 def main(args):
-    class_descriptions = [l.strip().split(',') for l in open(args.class_descriptions)]
+    class_descriptions = [l.strip().split(',') for l in open(args.class_descriptions, encoding="utf8")]
     class_descriptions = {class_descriptions[i][0]: (i, class_descriptions[i][1]) for i in range(len(class_descriptions))}
     process_list(list_path=args.train_list,
                  output_dir=args.output_dir,
