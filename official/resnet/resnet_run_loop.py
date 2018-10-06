@@ -45,7 +45,7 @@ from official.utils.misc import model_helpers
 ################################################################################
 # Losses
 ################################################################################
-def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
+def adjusted_loss(logits, labels, recall_factor, weights=None, alpha=0.25, gamma=2):
     # loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
     # loss_for_recall = loss * labels * 10
     # total_loss = loss + loss_for_recall
@@ -115,7 +115,8 @@ def adjusted_loss(logits, labels, weights=None, alpha=0.25, gamma=2):
     # More weight to recall #
     #########################
 
-    loss_for_recall = per_entry_cross_ent * labels * tf.cast((tf.shape(per_entry_cross_ent)[1] / 100), dtype=tf.float32)
+    recall_factor = tf.cast(recall_factor, dtype=tf.float32)
+    loss_for_recall = per_entry_cross_ent * labels * recall_factor #tf.cast((tf.shape(per_entry_cross_ent)[1] / 100), dtype=tf.float32)
 
     ##############
     # Sum losses #
@@ -326,7 +327,7 @@ def learning_rate_with_decay(
 
 def resnet_model_fn(features, labels, mode, model_class, num_classes,
                     resnet_size, weight_decay, learning_rate_fn, momentum,
-                    data_format, resnet_version, loss_scale,
+                    data_format, resnet_version, loss_scale, recall_factor,
                     loss_filter_fn=None, dtype=resnet_model.DEFAULT_DTYPE,
                     fine_tune=False):
   """Shared functionality for different resnet model_fns.
@@ -398,7 +399,7 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes,
         })
 
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
-  cross_entropy = adjusted_loss(logits=logits, labels=labels)
+  cross_entropy = adjusted_loss(logits=logits, labels=labels, recall_factor=recall_factor)
 
   # Create a tensor named cross_entropy for logging purposes.
   tf.identity(cross_entropy, name='cross_entropy')
@@ -551,6 +552,7 @@ def resnet_main(
           'dtype': flags_core.get_tf_dtype(flags_obj),
           'fine_tune': flags_obj.fine_tune,
           'num_classes': flags_obj.num_classes,
+          'recall_factor': flags_obj.recall_factor,
       })
 
   run_params = {

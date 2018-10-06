@@ -225,7 +225,8 @@ def cifar10_model_fn(features, labels, mode, params):
       loss_scale=params['loss_scale'],
       loss_filter_fn=loss_filter_fn,
       dtype=params['dtype'],
-      fine_tune=params['fine_tune']
+      fine_tune=params['fine_tune'],
+      recall_factor=params['recall_factor'],
   )
 
 

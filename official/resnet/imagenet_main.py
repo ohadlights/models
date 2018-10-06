@@ -317,7 +317,8 @@ def imagenet_model_fn(features, labels, mode, params):
       loss_filter_fn=None,
       dtype=params['dtype'],
       fine_tune=params['fine_tune'],
-      num_classes=params['num_classes']
+      num_classes=params['num_classes'],
+      recall_factor=params['recall_factor']
   )
 
 
