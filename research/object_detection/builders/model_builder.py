@@ -86,6 +86,8 @@ FASTER_RCNN_FEATURE_EXTRACTOR_CLASS_MAP = {
     frcnn_resnet_v1.FasterRCNNResnet101FeatureExtractor,
     'faster_rcnn_resnet152':
     frcnn_resnet_v1.FasterRCNNResnet152FeatureExtractor,
+    'faster_rcnn_resnet50_5':
+    frcnn_resnet_v1.FasterRCNNResnet505FeatureExtractor,
 }
 
 
