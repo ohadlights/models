@@ -19,7 +19,7 @@ def create_example(raw_sample, images_root_dir, image_format):
         class_labels += [int(label_id)]
         classes_text += [str(label_id).encode()]
 
-    image_path = os.path.join(images_root_dir, image_id) + '_rgba.png'
+    image_path = os.path.join(images_root_dir, image_id)
     filename = image_id.encode()
 
     with tf.gfile.GFile(image_path, 'rb') as fid:
@@ -68,14 +68,14 @@ def main(args):
                  output_dir=args.output_dir,
                  images_root_dir=args.images_root_dir,
                  image_format=args.image_format,
-                 num_shards=5)
+                 num_shards=1)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_list', required=True)
     parser.add_argument('--val_list', required=True)
-    parser.add_argument('--class_descriptions', required=True)
+
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--images_root_dir', required=True)
     parser.add_argument('--image_format', default='png', help='options: jpeg/png')

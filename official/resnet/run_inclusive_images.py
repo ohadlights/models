@@ -30,12 +30,12 @@ from official.resnet import resnet_run_loop
 from official.resnet import imagenet_preprocessing
 from official.resnet.imagenet_main import define_imagenet_flags, imagenet_model_fn
 
-_DEFAULT_IMAGE_SIZE = 224
-_NUM_CHANNELS = 3
+_DEFAULT_IMAGE_SIZE = 512
+_NUM_CHANNELS = 4
 
-_NUM_TRAIN_FILES = 250
-_NUM_VAL_FILES = 5
-_SHUFFLE_BUFFER = 10000
+_NUM_TRAIN_FILES = 10
+_NUM_VAL_FILES = 1
+_SHUFFLE_BUFFER = 1000
 
 DATASET_NAME = 'OpenImages'
 

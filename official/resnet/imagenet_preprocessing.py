@@ -37,10 +37,11 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-_R_MEAN = 123.68
-_G_MEAN = 116.78
-_B_MEAN = 103.94
-_CHANNEL_MEANS = [_R_MEAN, _G_MEAN, _B_MEAN]
+_R_MEAN = 127.0
+_G_MEAN = 127.0
+_B_MEAN = 127.0
+_A_MEAN = 127.0
+_CHANNEL_MEANS = [_R_MEAN, _G_MEAN, _B_MEAN, _A_MEAN]
 
 # The lower bound for the smallest side of the image for aspect-preserving
 # resizing. For example, if an image is 500 x 1000, it will be resized to
@@ -74,7 +75,7 @@ def _decode_crop_and_flip(image_buffer, bbox, num_channels):
   # bounding box. If no box is supplied, then we assume the bounding box is
   # the entire image.
   sample_distorted_bounding_box = tf.image.sample_distorted_bounding_box(
-      tf.image.extract_jpeg_shape(image_buffer),
+      image_size=[512, 512, 4],#tf.image.extract_jpeg_shape(image_buffer),
       bounding_boxes=bbox,
       min_object_covered=0.1,
       aspect_ratio_range=[0.75, 1.33],
