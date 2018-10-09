@@ -8,6 +8,7 @@ etc
 import os
 
 import cv2
+from tqdm import tqdm
 
 from official.resnet.inference.common import get_parser, get_classes_desc
 from official.resnet.inference.model_inference import ModelInference
@@ -19,7 +20,7 @@ def main(args):
     all_classifications = []
 
     with ModelInference(num_classes=num_classes, resnet_size=args.resnet_size, model_path=args.model_path) as model:
-        for file in os.listdir(args.images_dir):
+        for file in tqdm(os.listdir(args.images_dir)):
             image_path = os.path.join(args.images_dir, file)
             image = cv2.imread(image_path)
 
