@@ -481,7 +481,7 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes,
   tf.identity(recall, name='train_recall')
   tf.summary.scalar('train_recall', recall)
 
-  tf.identity(f2, name='train_f2_score')
+  tf.identity(f2, name='train_f1_score')
   tf.summary.scalar('train_f1_score', f2)
 
   f2_score_m = f2_score_metric(preds=probabilities_32, labels=labels_32)
