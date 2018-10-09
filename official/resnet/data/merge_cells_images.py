@@ -7,12 +7,14 @@ from tqdm import tqdm
 
 
 def main():
-    data = pd.read_csv(r'X:\cells\train.csv')
+    # data = pd.read_csv(r'X:\cells\train.csv')
+    # ids = data['Id'].tolist()
 
-    ids = data['Id'].tolist()
+    ids = [file.split('_')[0] for file in os.listdir(r'X:\cells\test')]
+    ids = set(ids)
 
-    inout_dir = r'X:\cells\train'
-    output_dir = r'X:\cells\train_merged'
+    inout_dir = r'X:\cells\test'
+    output_dir = r'X:\cells\test_merged'
 
     for img_id in tqdm(ids):
         img_path = os.path.join(inout_dir, img_id)

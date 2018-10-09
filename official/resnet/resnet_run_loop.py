@@ -146,7 +146,7 @@ def calc_f2_score(preds, labels):
         recall = 1 if num_to_recall == 0 else num_found / num_to_recall
 
         eps = 1e-5
-        f2 = (5 * precision * recall) / (4 * precision + recall + eps)
+        f2 = 2 * (precision * recall) / (precision + recall + eps)
 
         return float(precision), float(recall), float(f2)
 
@@ -158,7 +158,7 @@ def f2_score_metric(preds, labels):
     R, update_recall = tf.metrics.recall(preds, labels)
     eps = 1e-5
     #with tf.control_dependencies([P, update_precision, R, update_recall]):
-    score = 5 * (P * R) / (4 * P + R + eps)
+    score = 2 * (P * R) / (P + R + eps)
     return score, tf.group(update_precision, update_recall)
 
 
@@ -482,7 +482,7 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes,
   tf.summary.scalar('train_recall', recall)
 
   tf.identity(f2, name='train_f2_score')
-  tf.summary.scalar('train_f2_score', f2)
+  tf.summary.scalar('train_f1_score', f2)
 
   f2_score_m = f2_score_metric(preds=probabilities_32, labels=labels_32)
   metrics = {'accuracy': f2_score_m}
