@@ -18,7 +18,7 @@ def main(output_path, submissions_dir, merge_files):
 
 
 if __name__ == '__main__':
-    main(output_path=r'X:\OpenImages\InclusiveChallenge\submissions\merged\submission1.txt',
+    main(output_path=r'X:\OpenImages\InclusiveChallenge\submissions\merged\submission2.txt',
          submissions_dir=r'X:\OpenImages\InclusiveChallenge\submissions',
          merge_files=['range_more_100k_val_multi-2866309',
                       'range_in_10k_100K_multi-1060309',
