@@ -50,5 +50,6 @@ def define_image(data_format=True):
   flags.DEFINE_integer('num_classes', -1, 'The number of classes.')
   flags.DEFINE_integer('num_images_per_epoch', -1, 'The number of images per epoch')
   flags.DEFINE_float('recall_factor', 1, 'Factor to give to recall loss')
+  flags.DEFINE_float('weight_decay', 0.0001, 'Weight decay')
 
   return key_flags
