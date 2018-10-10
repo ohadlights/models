@@ -268,6 +268,7 @@ def _get_block_sizes(resnet_size):
     KeyError: if invalid resnet_size is received.
   """
   choices = {
+      10: [1, 1, 1, 1],
       18: [2, 2, 2, 2],
       34: [3, 4, 6, 3],
       50: [3, 4, 6, 3],
