@@ -11,7 +11,7 @@ def get_parser():
 
 
 def get_classes_desc(classes_path, map_to_id):
-    content = [l.strip().split(',') for l in open(classes_path).readlines()]
+    content = [l.strip().split(',') for l in open(classes_path, encoding='utf8').readlines()]
     index = 0 if map_to_id else 1
     classes_desc = {i: content[i][index] for i in range(len(content))}
     return classes_desc, len(content)
