@@ -481,11 +481,11 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes,
   tf.identity(recall, name='train_recall')
   tf.summary.scalar('train_recall', recall)
 
-  tf.identity(f2, name='train_f2_score')
-  tf.summary.scalar('train_f2_score', f2)
+  tf.identity(f2, name='f2_score')
+  tf.summary.scalar('f2_score', f2)
 
   f2_score_m = f2_score_metric(preds=probabilities_32, labels=labels_32)
-  metrics = {'accuracy': f2_score_m}
+  metrics = {'f2_score': f2_score_m}
 
   return tf.estimator.EstimatorSpec(
       mode=mode,
@@ -636,7 +636,7 @@ def resnet_main(
     benchmark_logger.log_evaluation_result(eval_results)
 
     if model_helpers.past_stop_threshold(
-        flags_obj.stop_threshold, eval_results['accuracy']):
+        flags_obj.stop_threshold, eval_results['f2_score']):
       break
 
   if flags_obj.export_dir is not None:
