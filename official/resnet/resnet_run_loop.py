@@ -325,9 +325,22 @@ def learning_rate_with_decay(
   return learning_rate_fn
 
 
+def get_optimizer(optimizer_type, learning_rate, momentum):
+    if optimizer_type == 'Momentum':
+        optimizer = tf.train.MomentumOptimizer(
+            learning_rate=learning_rate,
+            momentum=momentum
+        )
+    elif optimizer_type == 'Adam':
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    else:
+        raise Exception('Invalid optimizer type {}'.format(optimizer_type))
+    return optimizer
+
+
 def resnet_model_fn(features, labels, mode, model_class, num_classes, dropout_rate,
                     resnet_size, weight_decay, learning_rate_fn, momentum,
-                    data_format, resnet_version, loss_scale, recall_factor,
+                    data_format, resnet_version, loss_scale, recall_factor, optimizer_type,
                     loss_filter_fn=None, dtype=resnet_model.DEFAULT_DTYPE,
                     fine_tune=False):
   """Shared functionality for different resnet model_fns.
@@ -428,10 +441,8 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes, dropout_ra
     tf.identity(learning_rate, name='learning_rate')
     tf.summary.scalar('learning_rate', learning_rate)
 
-    optimizer = tf.train.MomentumOptimizer(
-        learning_rate=learning_rate,
-        momentum=momentum
-    )
+    optimizer = get_optimizer(optimizer_type, momentum=momentum, learning_rate=learning_rate)
+
 
     def _dense_grad_filter(gvs):
       """Only apply gradient updates to the final layer.
@@ -555,6 +566,7 @@ def resnet_main(
           'recall_factor': flags_obj.recall_factor,
           'weight_decay': flags_obj.weight_decay,
           'dropout_rate': flags_obj.dropout_rate,
+          'optimizer': flags_obj.optimizer,
       })
 
   run_params = {
@@ -567,6 +579,7 @@ def resnet_main(
       'num_classes': flags_obj.num_classes,
       'weight_decay': flags_obj.weight_decay,
       'dropout_rate': flags_obj.dropout_rate,
+      'optimizer': flags_obj.optimizer,
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'

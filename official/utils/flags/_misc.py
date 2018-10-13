@@ -52,5 +52,6 @@ def define_image(data_format=True):
   flags.DEFINE_float('recall_factor', 1, 'Factor to give to recall loss')
   flags.DEFINE_float('weight_decay', 0.0001, 'Weight decay')
   flags.DEFINE_float('dropout_rate', 0.0, 'Dropout rate')
-
+  flags.DEFINE_string('optimizer', 'Momentum', 'Optimizer type Mommentum/Adam')
+  flags.DEFINE_float('learning_rate', 0.001, 'Learning rate')
   return key_flags
