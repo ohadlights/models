@@ -212,7 +212,7 @@ def get_synth_input_fn(dtype):
 class ImagenetModel(resnet_model.Model):
   """Model class with appropriate defaults for Imagenet data."""
 
-  def __init__(self, resnet_size, num_classes, data_format=None,
+  def __init__(self, resnet_size, num_classes, dropout_rate, data_format=None,
                resnet_version=resnet_model.DEFAULT_VERSION,
                dtype=resnet_model.DEFAULT_DTYPE):
     """These are the parameters that work for Imagenet data.
@@ -247,7 +247,8 @@ class ImagenetModel(resnet_model.Model):
         block_strides=[1, 2, 2, 2],
         resnet_version=resnet_version,
         data_format=data_format,
-        dtype=dtype
+        dtype=dtype,
+        dropout_rate=dropout_rate,
     )
 
 
@@ -319,7 +320,8 @@ def imagenet_model_fn(features, labels, mode, params):
       dtype=params['dtype'],
       fine_tune=params['fine_tune'],
       num_classes=params['num_classes'],
-      recall_factor=params['recall_factor']
+      recall_factor=params['recall_factor'],
+      dropout_rate=params['dropout_rate']
   )
 
 

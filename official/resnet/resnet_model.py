@@ -353,7 +353,7 @@ class Model(object):
   def __init__(self, resnet_size, bottleneck, num_classes, num_filters,
                kernel_size,
                conv_stride, first_pool_size, first_pool_stride,
-               block_sizes, block_strides,
+               block_sizes, block_strides, dropout_rate,
                resnet_version=DEFAULT_VERSION, data_format=None,
                dtype=DEFAULT_DTYPE):
     """Creates a model for classifying an image.
