@@ -296,12 +296,12 @@ def imagenet_model_fn(features, labels, mode, params):
     warmup = False
     base_lr = .1
   else:
-    warmup = True
+    warmup = False
     base_lr = .128
 
   learning_rate_fn = resnet_run_loop.learning_rate_with_decay(
       batch_size=params['batch_size'], batch_denom=256,
-      num_images=_NUM_IMAGES['train'], boundary_epochs=[30, 60, 80, 90],
+      num_images=_NUM_IMAGES['train'], boundary_epochs=[60, 120, 160, 180],
       decay_rates=[1, 0.1, 0.01, 0.001, 1e-4], warmup=warmup, base_lr=base_lr)
 
   return resnet_run_loop.resnet_model_fn(
@@ -330,7 +330,7 @@ def define_imagenet_flags():
   resnet_run_loop.define_resnet_flags(
       resnet_size_choices=['10', '18', '34', '50', '101', '152', '200'])
   flags.adopt_module_key_flags(resnet_run_loop)
-  flags_core.set_defaults(train_epochs=180)
+  flags_core.set_defaults(train_epochs=220)
 
 
 def run_imagenet(flags_obj):
