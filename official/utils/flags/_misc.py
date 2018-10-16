@@ -54,4 +54,6 @@ def define_image(data_format=True):
   flags.DEFINE_float('dropout_rate', 0.0, 'Dropout rate')
   flags.DEFINE_string('optimizer', 'Momentum', 'Optimizer type Mommentum/Adam')
   flags.DEFINE_float('learning_rate', 0.001, 'Learning rate')
+  flags.DEFINE_float('focal_loss_alpha', 0.25, '')
+  flags.DEFINE_float('focal_loss_gamma', 2, '')
   return key_flags

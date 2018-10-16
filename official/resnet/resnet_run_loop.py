@@ -340,6 +340,7 @@ def get_optimizer(optimizer_type, learning_rate, momentum):
 def resnet_model_fn(features, labels, mode, model_class, num_classes, dropout_rate,
                     resnet_size, weight_decay, learning_rate_fn, momentum,
                     data_format, resnet_version, loss_scale, recall_factor, optimizer_type,
+                    focal_loss_gamma, focal_loss_alpha,
                     loss_filter_fn=None, dtype=resnet_model.DEFAULT_DTYPE,
                     fine_tune=False):
   """Shared functionality for different resnet model_fns.
@@ -566,7 +567,9 @@ def resnet_main(
           'weight_decay': flags_obj.weight_decay,
           'dropout_rate': flags_obj.dropout_rate,
           'optimizer': flags_obj.optimizer,
-          'num_images_per_epoch': flags_obj.num_images_per_epoch
+          'num_images_per_epoch': flags_obj.num_images_per_epoch,
+          'focal_loss_alpha': flags_obj.focal_loss_alpha,
+          'focal_loss_gamma': flags_obj.focal_loss_gamma,
       })
 
   run_params = {
@@ -580,6 +583,8 @@ def resnet_main(
       'weight_decay': flags_obj.weight_decay,
       'dropout_rate': flags_obj.dropout_rate,
       'optimizer': flags_obj.optimizer,
+      'focal_loss_alpha': flags_obj.focal_loss_alpha,
+      'focal_loss_gamma': flags_obj.focal_loss_gamma,
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'
