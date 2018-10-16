@@ -32,9 +32,13 @@ from official.utils.logs import metric_hook
 
 _TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate',
                                         'cross_entropy',
-                                        'train_precision',
-                                        'train_recall',
-                                        'train_f1_score'])
+                                        'train_precision_micro',
+                                        'train_recall_micro',
+                                        'train_f1_score',
+                                        'train_precision_macro',
+                                        'train_recall_macro',
+                                        'train_f1_macro'
+                                        ])
 
 
 def get_train_hooks(name_list, use_tpu=False, **kwargs):

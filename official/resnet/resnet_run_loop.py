@@ -31,6 +31,7 @@ from absl import flags
 import tensorflow as tf
 from tensorflow.python.ops import array_ops
 import numpy as np
+from sklearn.metrics import f1_score, recall_score, precision_score
 
 from official.resnet import resnet_model
 from official.utils.flags import core as flags_core
@@ -131,25 +132,9 @@ def adjusted_loss(logits, labels, recall_factor, weights=None, alpha=0.25, gamma
 ################################################################################
 def calc_f2_score(preds, labels):
     def _calc_f2(pred, label):
-        num_found = np.count_nonzero(pred)
-        num_relevant = np.count_nonzero(pred * label)
-        if num_found == 0 and num_relevant == 0:
-            precision = 1
-        elif num_found == 0 and num_relevant > 0:
-            precision = 0
-        else:
-            precision = num_relevant / num_found
-
-        num_to_recall = np.count_nonzero(label)
-        num_found = np.count_nonzero(label * pred)
-        recall = 1 if num_to_recall == 0 else num_found / num_to_recall
-
-        eps = 1e-5
-        f2 = 2 * (precision * recall) / (precision + recall + eps)
-
-        return float(precision), float(recall), float(f2)
-
-    return tf.py_func(_calc_f2, [preds, labels], [tf.float64, tf.float64, tf.float64])
+        return recall_score(label, pred, average='micro'), precision_score(label, pred, average='micro'), f1_score(label, pred, average='micro'),\
+               recall_score(label, pred, average='macro'), precision_score(label, pred, average='macro'), f1_score(label, pred, average='macro')
+    return tf.py_func(_calc_f2, [preds, labels], [tf.float64, tf.float64, tf.float64, tf.float64, tf.float64, tf.float64])
 
 
 def f2_score_metric(preds, labels):
@@ -483,17 +468,26 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes, dropout_ra
 
   labels_32 = tf.cast(tf.round(labels), dtype=tf.int32)
   probabilities_32 = tf.cast(tf.round(predictions['probabilities']), dtype=tf.int32)
-  precision, recall, f2 = calc_f2_score(probabilities_32, labels_32)
+  re_mic, pr_mic, f1_mic, re_mac, pr_mac, f1_mac = calc_f2_score(probabilities_32, labels_32)
 
   # Create a tensors for logging purposes
-  tf.identity(precision, name='train_precision')
-  tf.summary.scalar('train_precision', precision)
+  tf.identity(pr_mic, name='train_precision_micro')
+  tf.summary.scalar('train_precision_micro', pr_mic)
 
-  tf.identity(recall, name='train_recall')
-  tf.summary.scalar('train_recall', recall)
+  tf.identity(re_mic, name='train_recall_micro')
+  tf.summary.scalar('train_recall_micro', re_mic)
 
-  tf.identity(f2, name='train_f1_score')
-  tf.summary.scalar('f1_score', f2)
+  tf.identity(f1_mic, name='train_f1_score')
+  tf.summary.scalar('f1_score', f1_mic)
+
+  tf.identity(pr_mac, name='train_precision_macro')
+  tf.summary.scalar('train_precision_macro', pr_mac)
+
+  tf.identity(re_mac, name='train_recall_macro')
+  tf.summary.scalar('train_recall_macro', re_mac)
+
+  tf.identity(f1_mac, name='train_f1_macro')
+  tf.summary.scalar('f1_score_macro', f1_mac)
 
   f2_score_m = f2_score_metric(preds=probabilities_32, labels=labels_32)
   metrics = {'f1_score': f2_score_m}
