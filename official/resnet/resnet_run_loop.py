@@ -130,16 +130,18 @@ def adjusted_loss(logits, labels, recall_factor, weights=None, alpha=0.25, gamma
 ################################################################################
 # Metrics
 ################################################################################
-def calc_f2_score(preds, labels):
+def calc_f1_score(preds, labels):
     def _calc_f2(pred, label):
         return recall_score(label, pred, average='micro'), precision_score(label, pred, average='micro'), f1_score(label, pred, average='micro'),\
                recall_score(label, pred, average='macro'), precision_score(label, pred, average='macro'), f1_score(label, pred, average='macro')
     return tf.py_func(_calc_f2, [preds, labels], [tf.float64, tf.float64, tf.float64, tf.float64, tf.float64, tf.float64])
 
 
-def f2_score_metric(preds, labels):
-    P, update_precision = tf.metrics.precision(preds, labels)
-    R, update_recall = tf.metrics.recall(preds, labels)
+def f1_score_metric(preds, labels):
+    preds_t = tf.transpose(preds)
+    labels_t = tf.transpose(labels)
+    P, update_precision = tf.metrics.precision(preds_t, labels_t)
+    R, update_recall = tf.metrics.recall(preds_t, labels_t)
     eps = 1e-5
     #with tf.control_dependencies([P, update_precision, R, update_recall]):
     score = 2 * (P * R) / (P + R + eps)
@@ -468,7 +470,7 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes, dropout_ra
 
   labels_32 = tf.cast(tf.round(labels), dtype=tf.int32)
   probabilities_32 = tf.cast(tf.round(predictions['probabilities']), dtype=tf.int32)
-  re_mic, pr_mic, f1_mic, re_mac, pr_mac, f1_mac = calc_f2_score(probabilities_32, labels_32)
+  re_mic, pr_mic, f1_mic, re_mac, pr_mac, f1_mac = calc_f1_score(probabilities_32, labels_32)
 
   # Create a tensors for logging purposes
   tf.identity(pr_mic, name='train_precision_micro')
@@ -478,7 +480,7 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes, dropout_ra
   tf.summary.scalar('train_recall_micro', re_mic)
 
   tf.identity(f1_mic, name='train_f1_score')
-  tf.summary.scalar('f1_score', f1_mic)
+  tf.summary.scalar('f1_score_micro', f1_mic)
 
   tf.identity(pr_mac, name='train_precision_macro')
   tf.summary.scalar('train_precision_macro', pr_mac)
@@ -487,9 +489,9 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes, dropout_ra
   tf.summary.scalar('train_recall_macro', re_mac)
 
   tf.identity(f1_mac, name='train_f1_macro')
-  tf.summary.scalar('f1_score_macro', f1_mac)
+  tf.summary.scalar('f1_score', f1_mac)
 
-  f2_score_m = f2_score_metric(preds=probabilities_32, labels=labels_32)
+  f2_score_m = f1_score_metric(preds=probabilities_32, labels=labels_32)
   metrics = {'f1_score': f2_score_m}
 
   return tf.estimator.EstimatorSpec(
