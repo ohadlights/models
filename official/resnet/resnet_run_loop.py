@@ -567,6 +567,7 @@ def resnet_main(
           'weight_decay': flags_obj.weight_decay,
           'dropout_rate': flags_obj.dropout_rate,
           'optimizer': flags_obj.optimizer,
+          'num_images_per_epoch': flags_obj.num_images_per_epoch
       })
 
   run_params = {
