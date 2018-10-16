@@ -9,9 +9,9 @@ class ModelInference:
     def __init__(self, num_classes, resnet_size, model_path):
         self.model_path = model_path
 
-        self.inputs = tf.placeholder(dtype=tf.float32, shape=(None, 224, 224, 3), name='inputs')
+        self.inputs = tf.placeholder(dtype=tf.float32, shape=(None, 224, 224, 4), name='inputs')
 
-        model_class = ImagenetModel(resnet_size=resnet_size, num_classes=num_classes, resnet_version=2)
+        model_class = ImagenetModel(resnet_size=resnet_size, num_classes=num_classes, resnet_version=2, dropout_rate=0.0)
         logits = model_class(inputs=self.inputs, training=False)
         self.predictions = tf.nn.sigmoid(logits)
 
@@ -32,6 +32,7 @@ class ModelInference:
         result = self.sess.run(self.predictions, feed_dict={self.inputs: image_infer})[0]
 
         result = np.round(result)
+        # result = [1.0 if a > 0.1 else 0.0 for a in result]
 
         found = []
         for i in range(len(result)):

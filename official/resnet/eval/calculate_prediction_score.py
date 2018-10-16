@@ -2,7 +2,7 @@ import argparse
 from collections import defaultdict
 
 import numpy as np
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, recall_score, precision_score
 
 
 def get_predictions_as_array(image_ids, predictions, num_classes):
@@ -31,6 +31,12 @@ def main(args):
     ground_truth_array = get_predictions_as_array(image_ids, ground_truth, args.num_classes)
     predictions_array = get_predictions_as_array(image_ids, predictions, args.num_classes)
 
+    print('sklearn Micro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='micro'))
+    print('sklearn Micro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='micro'))
+    print('sklearn Micro-F1-Score:', f1_score(ground_truth_array, predictions_array, average='micro'))
+
+    print('sklearn Macro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='macro'))
+    print('sklearn Macro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='macro'))
     print('sklearn Macro-F1-Score:', f1_score(ground_truth_array, predictions_array, average='macro'))
 
     # find most missed labels and most false-predicted labels
