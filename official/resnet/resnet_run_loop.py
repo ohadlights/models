@@ -46,29 +46,26 @@ from official.utils.misc import model_helpers
 # Losses
 ################################################################################
 def adjusted_loss(logits, labels, recall_factor, weights=None, alpha=0.25, gamma=2):
-    # loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
-    # loss_for_recall = loss * labels * 10
-    # total_loss = loss + loss_for_recall
+
+    per_entry_cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
 
     ##############
     # Focal loss #
     ##############
 
-    # per_entry_cross_ent = tf.nn.sigmoid(logits)
-
-    sigmoid_p = tf.nn.sigmoid(logits)
-    zeros = array_ops.zeros_like(sigmoid_p, dtype=sigmoid_p.dtype)
-
-    # For poitive prediction, only need consider front part loss, back part is 0;
-    # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
-    pos_p_sub = array_ops.where(labels > zeros, labels - sigmoid_p, zeros)
-
-    # For negative prediction, only need consider back part loss, front part is 0;
-    # target_tensor > zeros <=> z=1, so negative coefficient = 0.
-    neg_p_sub = array_ops.where(labels > zeros, zeros, sigmoid_p)
-
-    per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * tf.log(tf.clip_by_value(sigmoid_p, 1e-8, 1.0)) \
-                          - (1 - alpha) * (neg_p_sub ** gamma) * tf.log(tf.clip_by_value(1.0 - sigmoid_p, 1e-8, 1.0))
+    # sigmoid_p = tf.nn.sigmoid(logits)
+    # zeros = array_ops.zeros_like(sigmoid_p, dtype=sigmoid_p.dtype)
+    #
+    # # For poitive prediction, only need consider front part loss, back part is 0;
+    # # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
+    # pos_p_sub = array_ops.where(labels > zeros, labels - sigmoid_p, zeros)
+    #
+    # # For negative prediction, only need consider back part loss, front part is 0;
+    # # target_tensor > zeros <=> z=1, so negative coefficient = 0.
+    # neg_p_sub = array_ops.where(labels > zeros, zeros, sigmoid_p)
+    #
+    # per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * tf.log(tf.clip_by_value(sigmoid_p, 1e-8, 1.0)) \
+    #                       - (1 - alpha) * (neg_p_sub ** gamma) * tf.log(tf.clip_by_value(1.0 - sigmoid_p, 1e-8, 1.0))
 
     ###################################################
     # Reset most of the negative losses for balancing #
