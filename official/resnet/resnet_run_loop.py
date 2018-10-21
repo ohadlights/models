@@ -553,6 +553,7 @@ def resnet_main(
           'fine_tune': flags_obj.fine_tune,
           'num_classes': flags_obj.num_classes,
           'recall_factor': flags_obj.recall_factor,
+          'weight_decay': flags_obj.weight_decay,
       })
 
   run_params = {
@@ -563,6 +564,7 @@ def resnet_main(
       'synthetic_data': flags_obj.use_synthetic_data,
       'train_epochs': flags_obj.train_epochs,
       'num_classes': flags_obj.num_classes,
+      'weight_decay': flags_obj.weight_decay,
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'
