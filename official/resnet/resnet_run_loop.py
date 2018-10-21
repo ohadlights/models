@@ -554,7 +554,8 @@ def resnet_main(
           'num_classes': flags_obj.num_classes,
           'recall_factor': flags_obj.recall_factor,
           'weight_decay': flags_obj.weight_decay,
-          'dropout_rate': flags_obj.dropout_rate
+          'dropout_rate': flags_obj.dropout_rate,
+          'warm_start': flags_obj.warm_start,
       })
 
   run_params = {
@@ -566,7 +567,8 @@ def resnet_main(
       'train_epochs': flags_obj.train_epochs,
       'num_classes': flags_obj.num_classes,
       'weight_decay': flags_obj.weight_decay,
-      'dropout_rate': flags_obj.dropout_rate
+      'dropout_rate': flags_obj.dropout_rate,
+      'warm_start': flags_obj.warm_start,
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'

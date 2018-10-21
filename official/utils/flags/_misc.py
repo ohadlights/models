@@ -52,5 +52,6 @@ def define_image(data_format=True):
   flags.DEFINE_float('recall_factor', 1, 'Factor to give to recall loss')
   flags.DEFINE_float('weight_decay', 1e-4, 'Weight decay')
   flags.DEFINE_float('dropout_rate', 0.0, 'Dropout rate')
+  flags.DEFINE_bool('warm_start', False, 'If True, adjust learning rate to lower initial lr and faster lr drop')
 
   return key_flags
