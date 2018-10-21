@@ -328,7 +328,7 @@ def learning_rate_with_decay(
 def resnet_model_fn(features, labels, mode, model_class, num_classes,
                     resnet_size, weight_decay, learning_rate_fn, momentum,
                     data_format, resnet_version, loss_scale, recall_factor,
-                    loss_filter_fn=None, dtype=resnet_model.DEFAULT_DTYPE,
+                    dropout_rate, loss_filter_fn=None, dtype=resnet_model.DEFAULT_DTYPE,
                     fine_tune=False):
   """Shared functionality for different resnet model_fns.
 
@@ -374,7 +374,7 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes,
   # Checks that features/images have same data type being used for calculations.
   assert features.dtype == dtype
 
-  model = model_class(resnet_size, num_classes=num_classes, data_format=data_format, resnet_version=resnet_version,
+  model = model_class(resnet_size, num_classes=num_classes, dropout_rate=dropout_rate, data_format=data_format, resnet_version=resnet_version,
                       dtype=dtype)
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
@@ -554,6 +554,7 @@ def resnet_main(
           'num_classes': flags_obj.num_classes,
           'recall_factor': flags_obj.recall_factor,
           'weight_decay': flags_obj.weight_decay,
+          'dropout_rate': flags_obj.dropout_rate
       })
 
   run_params = {
@@ -565,6 +566,7 @@ def resnet_main(
       'train_epochs': flags_obj.train_epochs,
       'num_classes': flags_obj.num_classes,
       'weight_decay': flags_obj.weight_decay,
+      'dropout_rate': flags_obj.dropout_rate
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'

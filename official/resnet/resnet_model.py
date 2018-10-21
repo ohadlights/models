@@ -354,6 +354,7 @@ class Model(object):
                kernel_size,
                conv_stride, first_pool_size, first_pool_stride,
                block_sizes, block_strides,
+               dropout_rate,
                resnet_version=DEFAULT_VERSION, data_format=None,
                dtype=DEFAULT_DTYPE):
     """Creates a model for classifying an image.
@@ -423,6 +424,7 @@ class Model(object):
     self.block_strides = block_strides
     self.dtype = dtype
     self.pre_activation = resnet_version == 2
+    self.dropout_rate = dropout_rate
 
   def _custom_dtype_getter(self, getter, name, shape=None, dtype=DEFAULT_DTYPE,
                            *args, **kwargs):
@@ -541,6 +543,7 @@ class Model(object):
       inputs = tf.identity(inputs, 'final_reduce_mean')
 
       inputs = tf.squeeze(inputs, axes)
+      inputs = tf.layers.dropout(inputs=inputs, rate=self.dropout_rate, training=training)
       inputs = tf.layers.dense(inputs=inputs, units=self.num_classes)
       inputs = tf.identity(inputs, 'final_dense')
       return inputs
