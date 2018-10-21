@@ -285,7 +285,7 @@ def imagenet_model_fn(features, labels, mode, params):
   """Our model_fn for ResNet to be used with our Estimator."""
 
   if params['warm_start']:
-    print('warm_start')
+    tf.logging.info('Warm start...')
     learning_rate_fn = resnet_run_loop.learning_rate_with_decay(
       batch_size=params['batch_size'], batch_denom=256,
       num_images=params['num_images_per_epoch'], boundary_epochs=[15, 30, 40, 45],
