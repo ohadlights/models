@@ -556,6 +556,7 @@ def resnet_main(
           'weight_decay': flags_obj.weight_decay,
           'dropout_rate': flags_obj.dropout_rate,
           'warm_start': flags_obj.warm_start,
+          'num_images_per_epoch': flags_obj.num_images_per_epoch,
       })
 
   run_params = {
@@ -569,6 +570,7 @@ def resnet_main(
       'weight_decay': flags_obj.weight_decay,
       'dropout_rate': flags_obj.dropout_rate,
       'warm_start': flags_obj.warm_start,
+      'num_images_per_epoch': flags_obj.num_images_per_epoch,
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'
