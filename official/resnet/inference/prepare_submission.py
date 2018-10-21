@@ -33,9 +33,13 @@ def main(args):
     output_path = os.path.join(args.output_dir,
                                '{}{}.txt'.format(model_path[-2], model_path[-1].replace('model.ckpt', '')))
     with open(output_path, 'w') as f:
-        f.write('image_id,labels')
+        f.write('image_id,labels\n')
+        f.write('2b2b327132556c767a736b3d,/m/011yvr /m/05s2s /m/01bqvp /m/09qqq /m/0csby /m/0k2n5\n')
         for file, found in all_classifications:
-            f.write('{},{}\n'.format(file.replace('.jpg', ''), ' '.join(found)))
+            image_id = file.replace('.jpg', '')
+            if image_id == '2b2b327132556c767a736b3d':
+                continue
+            f.write('{},{}\n'.format(image_id, ' '.join(found)))
 
 
 if __name__ == '__main__':
