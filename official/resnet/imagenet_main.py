@@ -329,7 +329,7 @@ def define_imagenet_flags():
   resnet_run_loop.define_resnet_flags(
       resnet_size_choices=['18', '34', '50', '101', '152', '200'])
   flags.adopt_module_key_flags(resnet_run_loop)
-  flags_core.set_defaults(train_epochs=90)
+  flags_core.set_defaults(train_epochs=270)
 
 
 def run_imagenet(flags_obj):
