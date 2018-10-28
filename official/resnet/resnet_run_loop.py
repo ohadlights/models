@@ -547,13 +547,9 @@ def resnet_main(
 
   # initialize our model with all but the dense layer from pretrained resnet
   if flags_obj.pretrained_model_checkpoint_path is not None:
-    if flags_obj.warm_start:
-      tf.logging.info('Warm start settings...')
-      warm_start_settings = tf.estimator.WarmStartSettings(flags_obj.pretrained_model_checkpoint_path)
-    else:
-      warm_start_settings = tf.estimator.WarmStartSettings(
-        flags_obj.pretrained_model_checkpoint_path,
-        vars_to_warm_start='^(?!.*dense)')
+    warm_start_settings = tf.estimator.WarmStartSettings(
+      flags_obj.pretrained_model_checkpoint_path,
+      vars_to_warm_start=flags_obj.trainables)
   else:
     warm_start_settings = None
 
@@ -571,10 +567,10 @@ def resnet_main(
           'recall_factor': flags_obj.recall_factor,
           'weight_decay': flags_obj.weight_decay,
           'dropout_rate': flags_obj.dropout_rate,
-          'warm_start': flags_obj.warm_start,
           'num_images_per_epoch': flags_obj.num_images_per_epoch,
           'focal_loss_gamma': flags_obj.focal_loss_gamma,
           'focal_loss_alpha': flags_obj.focal_loss_alpha,
+          'base_lr': flags_obj.base_lr
       })
 
   run_params = {
@@ -587,7 +583,6 @@ def resnet_main(
       'num_classes': flags_obj.num_classes,
       'weight_decay': flags_obj.weight_decay,
       'dropout_rate': flags_obj.dropout_rate,
-      'warm_start': flags_obj.warm_start,
       'num_images_per_epoch': flags_obj.num_images_per_epoch,
   }
   if flags_obj.use_synthetic_data:
