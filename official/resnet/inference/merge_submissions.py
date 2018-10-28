@@ -14,15 +14,12 @@ def main(output_path, submissions_dir, merge_files):
     with open(output_path, 'w') as f:
         f.write('image_id,labels\n')
         for image_id, classes in all_classifications.items():
-            f.write('{},{}\n'.format(image_id, ' '.join(classes)))
+            f.write('{},{}\n'.format(image_id, ' '.join(set(classes))))
 
 
 if __name__ == '__main__':
-    main(output_path=r'X:\OpenImages\InclusiveChallenge\submissions\merged\submission3.txt',
+    main(output_path=r'X:\OpenImages\InclusiveChallenge\submissions\merged\submission4.txt',
          submissions_dir=r'X:\OpenImages\InclusiveChallenge\submissions',
-         merge_files=['range_more_100k_val_multi-2866309',
-                      'range_in_10k_100K_multi-2743824',
-                      'range_in_1k_10K_multi-2760289',
-                      'range_in_100_1k_multi_label-1943445',
-                      'range_in_50_100_multi-578232',
-                      'less_50_multi-331419'])
+         merge_files=['full_list_resnet100_1-1100721',
+                      'full_list_resnet100_0-522626',
+                      'full_list_resnet100_1-1311969'])
