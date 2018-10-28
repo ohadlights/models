@@ -321,7 +321,9 @@ def imagenet_model_fn(features, labels, mode, params):
       fine_tune=params['fine_tune'],
       num_classes=params['num_classes'],
       recall_factor=params['recall_factor'],
-      dropout_rate=params['dropout_rate']
+      dropout_rate=params['dropout_rate'],
+      focal_loss_gamma=params['focal_loss_gamma'],
+      focal_loss_alpha=params['focal_loss_alpha']
   )
 
 

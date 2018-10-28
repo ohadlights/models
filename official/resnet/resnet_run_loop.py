@@ -46,27 +46,35 @@ from official.utils.misc import model_helpers
 # Losses
 ################################################################################
 def adjusted_loss(logits, labels, recall_factor, weights=None, alpha=0.25, gamma=2):
-    # loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
-    # loss_for_recall = loss * labels * 10
-    # total_loss = loss + loss_for_recall
 
-    ##############
-    # Focal loss #
-    ##############
+    if alpha != 1.0 and gamma != 1.0:
 
-    sigmoid_p = tf.nn.sigmoid(logits)
-    zeros = array_ops.zeros_like(sigmoid_p, dtype=sigmoid_p.dtype)
+        ##############
+        # Focal loss #
+        ##############
 
-    # For poitive prediction, only need consider front part loss, back part is 0;
-    # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
-    pos_p_sub = array_ops.where(labels > zeros, labels - sigmoid_p, zeros)
+        sigmoid_p = tf.nn.sigmoid(logits)
+        zeros = array_ops.zeros_like(sigmoid_p, dtype=sigmoid_p.dtype)
 
-    # For negative prediction, only need consider back part loss, front part is 0;
-    # target_tensor > zeros <=> z=1, so negative coefficient = 0.
-    neg_p_sub = array_ops.where(labels > zeros, zeros, sigmoid_p)
+        # For poitive prediction, only need consider front part loss, back part is 0;
+        # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
+        pos_p_sub = array_ops.where(labels > zeros, labels - sigmoid_p, zeros)
 
-    per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * tf.log(tf.clip_by_value(sigmoid_p, 1e-8, 1.0)) \
-                          - (1 - alpha) * (neg_p_sub ** gamma) * tf.log(tf.clip_by_value(1.0 - sigmoid_p, 1e-8, 1.0))
+        # For negative prediction, only need consider back part loss, front part is 0;
+        # target_tensor > zeros <=> z=1, so negative coefficient = 0.
+        neg_p_sub = array_ops.where(labels > zeros, zeros, sigmoid_p)
+
+        per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * tf.log(tf.clip_by_value(sigmoid_p, 1e-8, 1.0)) \
+                              - (1 - alpha) * (neg_p_sub ** gamma) * tf.log(tf.clip_by_value(1.0 - sigmoid_p, 1e-8, 1.0))
+
+    else:
+
+        ##################
+        # Simple Sigmoid #
+        ##################
+
+        per_entry_cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
+
 
     ###################################################
     # Reset most of the negative losses for balancing #
@@ -327,7 +335,7 @@ def learning_rate_with_decay(
 
 def resnet_model_fn(features, labels, mode, model_class, num_classes,
                     resnet_size, weight_decay, learning_rate_fn, momentum,
-                    data_format, resnet_version, loss_scale, recall_factor,
+                    data_format, resnet_version, loss_scale, recall_factor, focal_loss_gamma, focal_loss_alpha,
                     dropout_rate, loss_filter_fn=None, dtype=resnet_model.DEFAULT_DTYPE,
                     fine_tune=False):
   """Shared functionality for different resnet model_fns.
@@ -399,7 +407,11 @@ def resnet_model_fn(features, labels, mode, model_class, num_classes,
         })
 
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
-  cross_entropy = adjusted_loss(logits=logits, labels=labels, recall_factor=recall_factor)
+  cross_entropy = adjusted_loss(logits=logits,
+                                labels=labels,
+                                recall_factor=recall_factor,
+                                gamma=focal_loss_gamma,
+                                alpha=focal_loss_alpha)
 
   # Create a tensor named cross_entropy for logging purposes.
   tf.identity(cross_entropy, name='cross_entropy')
@@ -561,6 +573,8 @@ def resnet_main(
           'dropout_rate': flags_obj.dropout_rate,
           'warm_start': flags_obj.warm_start,
           'num_images_per_epoch': flags_obj.num_images_per_epoch,
+          'focal_loss_gamma': flags_obj.focal_loss_gamma,
+          'focal_loss_alpha': flags_obj.focal_loss_alpha,
       })
 
   run_params = {

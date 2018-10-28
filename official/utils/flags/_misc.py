@@ -53,5 +53,7 @@ def define_image(data_format=True):
   flags.DEFINE_float('weight_decay', 1e-4, 'Weight decay')
   flags.DEFINE_float('dropout_rate', 0.0, 'Dropout rate')
   flags.DEFINE_bool('warm_start', False, 'If True, adjust learning rate to lower initial lr and faster lr drop')
+  flags.DEFINE_float('focal_loss_gamma', 2.0, '')
+  flags.DEFINE_float('focal_loss_alpha', 0.25, '')
 
   return key_flags
