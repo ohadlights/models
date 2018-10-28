@@ -11,7 +11,7 @@ class ModelInference:
 
         self.inputs = tf.placeholder(dtype=tf.float32, shape=(None, 224, 224, 3), name='inputs')
 
-        model_class = ImagenetModel(resnet_size=resnet_size, num_classes=num_classes, resnet_version=2)
+        model_class = ImagenetModel(resnet_size=resnet_size, num_classes=num_classes, resnet_version=2, dropout_rate=0.0)
         logits = model_class(inputs=self.inputs, training=False)
         self.predictions = tf.nn.sigmoid(logits)
 
@@ -25,17 +25,18 @@ class ModelInference:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.sess.close()
 
-    def infer(self, image):
-        image_infer = cv2.resize(image, (224, 224))
-        image_infer = np.array([image_infer])
+    def infer(self, images):
+        image_infer = np.array([cv2.resize(image, (224, 224)) for image in images])
 
-        result = self.sess.run(self.predictions, feed_dict={self.inputs: image_infer})[0]
+        result = self.sess.run(self.predictions, feed_dict={self.inputs: image_infer})
 
         result = np.round(result)
 
         found = []
         for i in range(len(result)):
-            if result[i] == 1.0:
-                found += [i]
+            found += [[]]
+            for j in range(len(result[i])):
+                if result[i][j] == 1.0:
+                    found[-1] += [j]
 
         return found
