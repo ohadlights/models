@@ -56,5 +56,6 @@ def define_image(data_format=True):
   flags.DEFINE_float('focal_loss_alpha', 0.25, '')
   flags.DEFINE_string('trainables', '^(?!.*dense)', '')
   flags.DEFINE_float('base_lr', 0.1, '')
+  flags.DEFINE_bool('warmup', False, '')
 
   return key_flags

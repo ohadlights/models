@@ -323,7 +323,7 @@ def learning_rate_with_decay(
     """Builds scaled learning rate function with 5 epoch warm up."""
     lr = tf.train.piecewise_constant(global_step, boundaries, vals)
     if warmup:
-      warmup_steps = int(batches_per_epoch * 5)
+      warmup_steps = int(batches_per_epoch * 2)
       warmup_lr = (
           initial_learning_rate * tf.cast(global_step, tf.float32) / tf.cast(
               warmup_steps, tf.float32))
@@ -570,7 +570,8 @@ def resnet_main(
           'num_images_per_epoch': flags_obj.num_images_per_epoch,
           'focal_loss_gamma': flags_obj.focal_loss_gamma,
           'focal_loss_alpha': flags_obj.focal_loss_alpha,
-          'base_lr': flags_obj.base_lr
+          'base_lr': flags_obj.base_lr,
+          'warmup': flags_obj.warmup,
       })
 
   run_params = {
