@@ -2,7 +2,7 @@ import argparse
 from collections import defaultdict
 
 import numpy as np
-from sklearn.metrics import f1_score, recall_score, precision_score
+from sklearn.metrics import fbeta_score, recall_score, precision_score
 
 from official.resnet.inference.common import get_classes_desc
 
@@ -40,11 +40,11 @@ def main(args):
 
     print('sklearn Micro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='micro'))
     print('sklearn Micro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='micro'))
-    print('sklearn Micro-F1-Score:', f1_score(ground_truth_array, predictions_array, average='micro'))
+    print('sklearn Micro-F2-Score:', fbeta_score(ground_truth_array, predictions_array, average='micro', beta=2))
 
     print('sklearn Macro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='macro'))
     print('sklearn Macro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='macro'))
-    print('sklearn Macro-F1-Score:', f1_score(ground_truth_array, predictions_array, average='macro'))
+    print('sklearn Macro-F2-Score:', fbeta_score(ground_truth_array, predictions_array, average='macro', beta=2))
 
     # find most missed labels and most false-predicted labels
 

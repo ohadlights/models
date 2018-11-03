@@ -16,14 +16,16 @@ def main(args):
             image_path = os.path.join(args.images_dir, file)
             image = cv2.imread(image_path)
 
-            found = model.infer(image=image)
+            found = model.infer(images=[image], threshold=args.threshold)[0]
 
             found = [classes_desc[index] for index in found]
-            print(', '.join(found))
 
-            image = cv2.resize(image, (480, 480))
-            cv2.imshow('view', image)
-            cv2.waitKey(0)
+            if len(found) > 0:
+                print(', '.join(found))
+
+                image = cv2.resize(image, (480, 480))
+                cv2.imshow('view', image)
+                cv2.waitKey(0)
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ def get_parser():
     parser.add_argument('--images_dir', default=r'D:\temp\stage_1_test_images')
     parser.add_argument('--resnet_size', type=int, default=50)
     parser.add_argument('--classes_path', required=True)
+    parser.add_argument('--threshold', type=float, default=0.75)
     return parser
 
 

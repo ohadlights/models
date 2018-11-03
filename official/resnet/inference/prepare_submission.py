@@ -35,7 +35,7 @@ def main(args):
             batch_paths = [os.path.join(args.images_dir, file) for file in batch_files]
             batch_images = [cv2.imread(image_path) for image_path in batch_paths]
 
-            founds = model.infer(images=batch_images)
+            founds = model.infer(images=batch_images, threshold=args.threshold)
 
             for i in range(0, len(batch_files)):
                 file = batch_files[i]

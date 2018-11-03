@@ -25,18 +25,16 @@ class ModelInference:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.sess.close()
 
-    def infer(self, images):
+    def infer(self, images, threshold=0.5):
         image_infer = np.array([cv2.resize(image, (224, 224)) for image in images])
 
         result = self.sess.run(self.predictions, feed_dict={self.inputs: image_infer})
-
-        result = np.round(result)
 
         found = []
         for i in range(len(result)):
             found += [[]]
             for j in range(len(result[i])):
-                if result[i][j] == 1.0:
+                if result[i][j] > threshold:
                     found[-1] += [j]
 
         return found
