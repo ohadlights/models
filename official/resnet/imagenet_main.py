@@ -286,7 +286,7 @@ def imagenet_model_fn(features, labels, mode, params):
 
   learning_rate_fn = resnet_run_loop.learning_rate_with_decay(
     batch_size=params['batch_size'], batch_denom=256,
-    num_images=params['num_images_per_epoch'], boundary_epochs=[15, 30, 40, 45],
+    num_images=params['num_images_per_epoch'], boundary_epochs=[20, 40, 50, 55],
     decay_rates=[1, 0.1, 0.01, 0.001, 1e-4], warmup=params['warmup'], base_lr=params['base_lr'])
 
   return resnet_run_loop.resnet_model_fn(
