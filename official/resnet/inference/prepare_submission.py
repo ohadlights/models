@@ -21,12 +21,28 @@ def get_files(args):
         return os.listdir(args.images_dir)
 
 
+def get_ignore_classes(args):
+    if not args.ignore_classes:
+        return set()
+
+    content = [l.strip().split(',') for l in open(args.classes_path, encoding='utf8').readlines()]
+    class_names_to_index = {content[i][1]: i for i in range(len(content))}
+
+    ignore_class_names = args.ignore_classes.split(',')
+    ignore_class_indexes = {class_names_to_index[name] for name in ignore_class_names}
+
+    return set(ignore_class_indexes)
+
+
 def main(args):
     batch_size = 32
 
     classes_desc, num_classes = get_classes_desc(args.classes_path, map_to_id=True)
 
+    ignore_class_indexes = get_ignore_classes(args)
+
     all_classifications = []
+    all_classifications_conf = []
 
     with ModelInference(num_classes=num_classes, resnet_size=args.resnet_size, model_path=args.model_path) as model:
         files = get_files(args)
@@ -35,15 +51,22 @@ def main(args):
             batch_paths = [os.path.join(args.images_dir, file) for file in batch_files]
             batch_images = [cv2.imread(image_path) for image_path in batch_paths]
 
-            founds = model.infer(images=batch_images, threshold=args.threshold)
+            founds, founds_conf = model.infer(images=batch_images, threshold=args.threshold, raw_threshold=0.5)
 
             for i in range(0, len(batch_files)):
                 file = batch_files[i]
+
                 found = founds[i]
+                found = set([index for index in found]) - ignore_class_indexes
                 found = [classes_desc[index] for index in found]
                 all_classifications += [(file, found)]
 
+                found_conf = founds_conf[i]
+                found_conf = [(classes_desc[a[0]], a[1]) for a in found_conf]
+                all_classifications_conf += [(file, found_conf)]
+
     model_path = args.model_path.split('\\')
+
     output_path = os.path.join(args.output_dir,
                                '{}{}.txt'.format(model_path[-2], model_path[-1].replace('model.ckpt', '')))
     with open(output_path, 'w') as f:
@@ -52,9 +75,18 @@ def main(args):
             image_id = file.replace('.jpg', '')
             f.write('{},{}\n'.format(image_id, ' '.join(found)))
 
+    output_path_conf = os.path.join(args.output_dir,
+                                    '{}{}_conf.txt'.format(model_path[-2], model_path[-1].replace('model.ckpt', '')))
+    with open(output_path_conf, 'w') as f:
+        f.write('image_id,labels\n')
+        for file, found in all_classifications_conf:
+            image_id = file.replace('.jpg', '')
+            f.write('{},{}\n'.format(image_id, ' '.join(['{}:{}'.format(a[0], a[1]) for a in found])))
+
 
 if __name__ == '__main__':
     parser = get_parser()
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--list_path')
+    parser.add_argument('--ignore_classes')
     main(parser.parse_args())

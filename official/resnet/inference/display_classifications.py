@@ -11,6 +11,8 @@ def main(args):
 
     with ModelInference(num_classes=num_classes, resnet_size=args.resnet_size, model_path=args.model_path) as model:
 
+        print('Start...')
+
         for file in os.listdir(args.images_dir):
 
             image_path = os.path.join(args.images_dir, file)
