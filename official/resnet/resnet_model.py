@@ -492,6 +492,15 @@ class Model(object):
       A logits Tensor with shape [<batch_size>, self.num_classes].
     """
 
+    # def print_image(inputs, training):
+    #     import numpy as np
+    #     print(inputs.dtype)
+    #     print('min {}'.format(np.min(inputs)))
+    #     print('max {}'.format(np.max(inputs)))
+    #     print('mean {}'.format(np.mean(inputs)))
+    #     return training
+    # training = tf.py_func(print_image, [inputs, training], tf.bool)
+
     with self._model_variable_scope():
       if self.data_format == 'channels_first':
         # Convert the inputs from channels_last (NHWC) to channels_first (NCHW).

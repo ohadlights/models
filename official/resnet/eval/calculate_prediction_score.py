@@ -42,10 +42,6 @@ def main(args):
     print('sklearn Micro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='micro'))
     print('sklearn Micro-F2-Score:', fbeta_score(ground_truth_array, predictions_array, average='micro', beta=2))
 
-    print('sklearn Macro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='macro'))
-    print('sklearn Macro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='macro'))
-    print('sklearn Macro-F2-Score:', fbeta_score(ground_truth_array, predictions_array, average='macro', beta=2))
-
     # find most missed labels and most false-predicted labels
 
     fp = defaultdict(float)
@@ -74,7 +70,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ground_truth_file', default=r'X:\cells\train-val.txt')
+    parser.add_argument('--ground_truth_file', default=r'X:\OpenImages\InclusiveChallenge\lists\all_val_multi.txt')
     parser.add_argument('--prediction_file', required=True)
     parser.add_argument('--classes_path', required=True)
     main(parser.parse_args())

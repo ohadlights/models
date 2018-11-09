@@ -9,9 +9,11 @@ import os
 
 import cv2
 from tqdm import tqdm
+import numpy as np
 
 from official.resnet.inference.common import get_parser, get_classes_desc
 from official.resnet.inference.model_inference import ModelInference
+from official.resnet.imagenet_preprocessing import _CHANNEL_MEANS
 
 
 def get_files(args):
@@ -34,6 +36,15 @@ def get_ignore_classes(args):
     return set(ignore_class_indexes)
 
 
+def load_images(batch_paths):
+    batch_images = [cv2.imread(image_path, cv2.IMREAD_UNCHANGED) for image_path in batch_paths]
+    for i in range(len(batch_images)):
+        batch_images[i] = batch_images[i].astype(np.float32)
+        for channel in range(0, 3):
+            batch_images[i][:, :, channel] -= _CHANNEL_MEANS[channel]
+    return batch_images
+
+
 def main(args):
     batch_size = 32
 
@@ -49,9 +60,9 @@ def main(args):
         for start_index in tqdm(range(0, len(files), batch_size)):
             batch_files = files[start_index:start_index+batch_size]
             batch_paths = [os.path.join(args.images_dir, file) for file in batch_files]
-            batch_images = [cv2.imread(image_path) for image_path in batch_paths]
+            batch_images = load_images(batch_paths)
 
-            founds, founds_conf = model.infer(images=batch_images, threshold=args.threshold, raw_threshold=0.5)
+            founds, founds_conf = model.infer(images=batch_images, threshold=args.threshold, raw_threshold=0.4)
 
             for i in range(0, len(batch_files)):
                 file = batch_files[i]
