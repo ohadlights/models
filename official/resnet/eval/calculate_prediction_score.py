@@ -49,7 +49,7 @@ def main(args):
 
     ground_truth_array = get_ground_truth_as_array(image_ids, ground_truth, num_classes)
 
-    for threshold in [0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8]:
+    for threshold in [0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8]:
 
         predictions_array = get_predictions_as_array(image_ids, predictions, num_classes, threshold)
 

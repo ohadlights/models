@@ -62,7 +62,7 @@ def main(args):
             batch_paths = [os.path.join(args.images_dir, file) for file in batch_files]
             batch_images = load_images(batch_paths)
 
-            founds, founds_conf = model.infer(images=batch_images, threshold=args.threshold, raw_threshold=0.4)
+            founds, founds_conf = model.infer(images=batch_images, threshold=args.threshold, raw_threshold=0.3)
 
             for i in range(0, len(batch_files)):
                 file = batch_files[i]
@@ -79,7 +79,7 @@ def main(args):
     model_path = args.model_path.split('\\')
 
     output_path = os.path.join(args.output_dir,
-                               '{}{}.txt'.format(model_path[-2], model_path[-1].replace('model.ckpt', '')))
+                               '{}{}_{}.txt'.format(model_path[-2], model_path[-1].replace('model.ckpt', ''), int(args.threshold * 100)))
     with open(output_path, 'w') as f:
         f.write('image_id,labels\n')
         for file, found in all_classifications:
