@@ -5,8 +5,8 @@ from official.resnet.inference.common import get_classes_desc
 
 
 def main():
-    images_root_dir = r'D:\temp\stage_1_test_images'
-    submission_file = r'X:\OpenImages\InclusiveChallenge\submissions\merged\submission6.txt'
+    images_root_dir = r'D:\temp\stage_2_images'
+    submission_file = r'X:\OpenImages\InclusiveChallenge\submissions\merged2.txt'
     classes_path = r'X:\OpenImages\InclusiveChallenge\docs\class-descriptions_trainable.csv'
 
     content = [l.strip().split(',') for l in open(classes_path, encoding='utf8').readlines()]

@@ -75,52 +75,58 @@ def output_acuracy(image_ids, ground_truth, predictions, num_classes, prediction
 
 
 def main(args):
+    prediction_files = args.prediction_files.split(',')
 
-    # Class indexes
+    for prediction_file in prediction_files:
 
-    classes_desc, num_classes = get_classes_desc(args.classes_path, map_to_id=True)
-    index_to_id = classes_desc
-    classes_desc = {i[1]: i[0] for i in classes_desc.items()}
+        args.prediction_file = os.path.join(args.prediction_dir, prediction_file)
 
-    # calculate F1 score
+        # Class indexes
 
-    ground_truth_content = [l.strip().split() for l in open(args.ground_truth_file).readlines()]
-    ground_truth = {l[0].replace('.jpg', ''): [classes_desc[a] for a in l[1:]] for l in ground_truth_content}
+        classes_desc, num_classes = get_classes_desc(args.classes_path, map_to_id=True)
+        index_to_id = classes_desc
+        classes_desc = {i[1]: i[0] for i in classes_desc.items()}
 
-    image_ids = ground_truth.keys()
-    ground_truth_array = get_ground_truth_as_array(image_ids, ground_truth, num_classes)
+        # calculate F1 score
 
-    predictions_content = [l.strip().split(',') for l in open(args.prediction_file).readlines()[1:]]
-    if ':' in predictions_content[0][1] or ':' in predictions_content[1][1]:
+        ground_truth_content = [l.strip().split() for l in open(args.ground_truth_file).readlines()]
+        ground_truth = {l[0].replace('.jpg', ''): [classes_desc[a] for a in l[1:]] for l in ground_truth_content}
 
-        predictions = {l[0]: [(classes_desc[a.split(':')[0]], float(a.split(':')[1])) for a in l[1].split()] for l in predictions_content}
+        image_ids = ground_truth.keys()
+        ground_truth_array = get_ground_truth_as_array(image_ids, ground_truth, num_classes)
 
-        for threshold in [0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8]:
-            predictions_array, predictions_list = get_predictions_as_array(image_ids, predictions, num_classes, threshold)
+        predictions_content = [l.strip().split(',') for l in open(args.prediction_file).readlines()[1:]]
+        if ':' in predictions_content[0][1] or ':' in predictions_content[1][1]:
 
-            print('threshold: {}'.format(threshold))
+            predictions = {l[0]: [(classes_desc[a.split(':')[0]], float(a.split(':')[1])) for a in l[1].split()] for l in predictions_content}
+
+            for threshold in [0.5, 0.55, 0.6, 0.65, 0.7, 0.8]:
+                predictions_array, predictions_list = get_predictions_as_array(image_ids, predictions, num_classes, threshold)
+
+                print('threshold: {}'.format(threshold))
+                print('sklearn Micro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='micro'))
+                print('sklearn Micro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='micro'))
+                print('sklearn Micro-F2-Score:',
+                      fbeta_score(ground_truth_array, predictions_array, average='micro', beta=2))
+                print('')
+                output_acuracy(image_ids, ground_truth, predictions_list, num_classes, args.prediction_file, threshold, index_to_id)
+        else:
+
+            predictions = {l[0]: [classes_desc[a] for a in l[1].split()] for l in predictions_content}
+
+            predictions_array = get_ground_truth_as_array(image_ids, predictions, num_classes)
+
             print('sklearn Micro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='micro'))
             print('sklearn Micro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='micro'))
-            print('sklearn Micro-F2-Score:',
-                  fbeta_score(ground_truth_array, predictions_array, average='micro', beta=2))
-            print('')
-            output_acuracy(image_ids, ground_truth, predictions_list, num_classes, args.prediction_file, threshold, index_to_id)
-    else:
+            print('sklearn Micro-F2-Score:', fbeta_score(ground_truth_array, predictions_array, average='micro', beta=2))
 
-        predictions = {l[0]: [classes_desc[a] for a in l[1].split()] for l in predictions_content}
-
-        predictions_array = get_ground_truth_as_array(image_ids, predictions, num_classes)
-
-        print('sklearn Micro-Re-Score:', recall_score(ground_truth_array, predictions_array, average='micro'))
-        print('sklearn Micro-Pr-Score:', precision_score(ground_truth_array, predictions_array, average='micro'))
-        print('sklearn Micro-F2-Score:', fbeta_score(ground_truth_array, predictions_array, average='micro', beta=2))
-
-        output_acuracy(image_ids, ground_truth, predictions, num_classes, args.prediction_file, 0.0, index_to_id)
+            # output_acuracy(image_ids, ground_truth, predictions, num_classes, args.prediction_file, 0.0, index_to_id)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--ground_truth_file', default=r'X:\OpenImages\InclusiveChallenge\lists\all_val_multi.txt')
-    parser.add_argument('--prediction_file', required=True)
+    parser.add_argument('--prediction_files', required=True)
+    parser.add_argument('--prediction_dir', required=True)
     parser.add_argument('--classes_path', required=True)
     main(parser.parse_args())

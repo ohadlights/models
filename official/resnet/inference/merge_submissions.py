@@ -26,19 +26,16 @@ def main(output_path, submissions_dir, merge_files):
 
 
 if __name__ == '__main__':
-    val = False
-    if val:
-        main(output_path=r'X:\OpenImages\InclusiveChallenge\submissions_val\merged1.txt',
-             submissions_dir=r'X:\OpenImages\InclusiveChallenge\submissions_val',
-             merge_files=['model.ckpt-1319557',
-                          'finetune_range_in_10K_100K_0-186505'])
-    else:
-        main(output_path=r'X:\OpenImages\InclusiveChallenge\submissions\merged_1.txt',
-             submissions_dir=r'X:\OpenImages\InclusiveChallenge\submissions',
-             merge_files=['full_list_resnet100_1-1319557_0.295',
-                          '50_100-23450',
-                          '100_1K-15984',
-                          '1K_10K-12488',
-                          '10K_100K-166487',
-                          '100K_1M-284367',
-                          ])
+    output_path = r'X:\OpenImages\InclusiveChallenge\submissions\merged_all-1319557_50_enhanced_95_pr75.txt'
+    main(output_path=output_path,
+         submissions_dir=os.path.dirname(output_path),
+         merge_files=[
+             'all-1319557_50_enhanced_95',
+             # 'all-1319557_50',
+             '100K_1M-284367_pick',
+             '10K_100K-166487_pick',
+             '1K_10K-12488_pick',
+             '100_1K-15984_pick',
+             '50_100-23450_pick',
+             '0_50-7515_pick'
+         ])
