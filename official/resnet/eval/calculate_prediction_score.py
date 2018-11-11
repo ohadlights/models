@@ -68,9 +68,15 @@ def output_acuracy(image_ids, ground_truth, predictions, num_classes, prediction
     # print('Pr: {}'.format(sorted(precision.items(), key=lambda a: a[1], reverse=True)))
     # print('Re: {}'.format(sorted(recall.items(), key=lambda a: a[1], reverse=True)))
 
-    with open(prediction_file.replace('.txt', '_accuracy_{}.txt'.format(int(threshold * 100))), 'w') as f:
+    min_f1 = 0.65
+    output_dir = os.path.join(os.path.dirname(prediction_file), 'accuracy_f1_{}'.format(int(min_f1 * 100)))
+    output_path = os.path.join(output_dir, os.path.basename(prediction_file).replace('.txt', '_accuracy_{}.txt'.format(int(threshold * 100))))
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    with open(output_path, 'w') as f:
         for i in range(num_classes):
-            if f2[i] > 0.4:
+            if f2[i] > min_f1:
                 f.write('{}\n'.format(classes_desc[i]))
 
 
@@ -125,7 +131,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ground_truth_file', default=r'X:\OpenImages\InclusiveChallenge\lists\all_val_multi.txt')
+    parser.add_argument('--ground_truth_file', required=True)
     parser.add_argument('--prediction_files', required=True)
     parser.add_argument('--prediction_dir', required=True)
     parser.add_argument('--classes_path', required=True)

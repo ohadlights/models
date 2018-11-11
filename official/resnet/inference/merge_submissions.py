@@ -26,16 +26,10 @@ def main(output_path, submissions_dir, merge_files):
 
 
 if __name__ == '__main__':
-    output_path = r'X:\OpenImages\InclusiveChallenge\submissions\merged_all-1319557_50_enhanced_95_pr75.txt'
+    output_path = r'D:\temp\inclusive\analysis\merged_balanced40_all90_100K70_10K65_1K65_100S55_50S65.txt'
     main(output_path=output_path,
          submissions_dir=os.path.dirname(output_path),
          merge_files=[
-             'all-1319557_50_enhanced_95',
-             # 'all-1319557_50',
-             '100K_1M-284367_pick',
-             '10K_100K-166487_pick',
-             '1K_10K-12488_pick',
-             '100_1K-15984_pick',
-             '50_100-23450_pick',
+             'merged_balanced40_all90_100K70_10K65_1K65_100S55',
              '0_50-7515_pick'
          ])

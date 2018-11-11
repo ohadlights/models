@@ -1,8 +1,8 @@
 import os
 
 
-def read_accuracy_files(conf_file):
-    search_dir = os.path.dirname(conf_file)
+def read_accuracy_files(conf_file, search_dir):
+    # search_dir = os.path.dirname(conf_file)
     prefix = os.path.basename(conf_file).replace('.txt', '_accuracy_')
     files = filter(lambda f: f.startswith(prefix), os.listdir(search_dir))
     label_to_threshold = {}
@@ -18,7 +18,7 @@ def read_accuracy_files(conf_file):
     return label_to_threshold
 
 
-def main(conf_files_dir, conf_files):
+def main(conf_files_dir, accuracy_files_dir, conf_files):
 
     for conf_file in conf_files.split(','):
 
@@ -29,7 +29,7 @@ def main(conf_files_dir, conf_files):
         predictions_content = [l.strip().split(',') for l in open(conf_file).readlines()[1:]]
         predictions = {l[0]: [(a.split(':')[0], float(a.split(':')[1])) for a in l[1].split()] for l in predictions_content}
 
-        label_to_threshold = read_accuracy_files(conf_file)
+        label_to_threshold = read_accuracy_files(conf_file, accuracy_files_dir)
 
         output_path = conf_file.replace('_conf.txt', '_pick.txt')
 
@@ -43,6 +43,17 @@ def main(conf_files_dir, conf_files):
                 f.write('{},{}\n'.format(image_id, ' '.join(predict_labels)))
 
 
+def run():
+    conf_files_dir = r'D:\temp\inclusive\analysis'
+    accuracy_files_folder = 'accuracy_f1_65'
+    conf_files = '0_50-7515_conf.txt'
+
+    accuracy_files_dir = os.path.join(conf_files_dir, accuracy_files_folder)
+
+    main(conf_files_dir=conf_files_dir,
+         accuracy_files_dir=accuracy_files_dir,
+         conf_files=conf_files)
+
+
 if __name__ == '__main__':
-    main(conf_files_dir=r'X:\OpenImages\InclusiveChallenge\submissions',
-         conf_files='100K_1M-284367_conf.txt,10K_100K-166487_conf.txt,1K_10K-12488_conf.txt,100_1K-15984_conf.txt,50_100-23450_conf.txt,0_50-7515_conf.txt')
+    run()

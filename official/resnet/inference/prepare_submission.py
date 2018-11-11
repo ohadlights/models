@@ -40,6 +40,7 @@ def load_images(batch_paths):
     batch_images = [cv2.imread(image_path, cv2.IMREAD_UNCHANGED) for image_path in batch_paths]
     for i in range(len(batch_images)):
         batch_images[i] = batch_images[i].astype(np.float32)
+        batch_images[i] = cv2.resize(batch_images[i], (224, 224))
         for channel in range(0, 3):
             batch_images[i][:, :, channel] -= _CHANNEL_MEANS[channel]
     return batch_images
