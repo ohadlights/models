@@ -57,20 +57,20 @@ def output_acuracy(image_ids, ground_truth, predictions, num_classes, prediction
 
     precision = defaultdict(float)
     recall = defaultdict(float)
-    f1 = defaultdict(float)
+    f2 = defaultdict(float)
 
     for i in range(num_classes):
         precision[i] = tp[i] / (tp[i] + fp[i] + 1e-5)
         recall[i] = tp[i] / (tp[i] + fn[i] + 1e-5)
-        f1[i] = (2 * precision[i] * recall[i]) / (precision[i] + recall[i] + 1e-5)
+        f2[i] = (5 * precision[i] * recall[i]) / (4 * precision[i] + recall[i] + 1e-5)
 
-    # print('F1: {}'.format(sorted(f1.items(), key=lambda a: a[1], reverse=True)))
+    # print('F1: {}'.format(sorted(f2.items(), key=lambda a: a[1], reverse=True)))
     # print('Pr: {}'.format(sorted(precision.items(), key=lambda a: a[1], reverse=True)))
     # print('Re: {}'.format(sorted(recall.items(), key=lambda a: a[1], reverse=True)))
 
     with open(prediction_file.replace('.txt', '_accuracy_{}.txt'.format(int(threshold * 100))), 'w') as f:
         for i in range(num_classes):
-            if precision[i] > 0.75:
+            if f2[i] > 0.4:
                 f.write('{}\n'.format(classes_desc[i]))
 
 
@@ -100,7 +100,7 @@ def main(args):
 
             predictions = {l[0]: [(classes_desc[a.split(':')[0]], float(a.split(':')[1])) for a in l[1].split()] for l in predictions_content}
 
-            for threshold in [0.5, 0.55, 0.6, 0.65, 0.7, 0.8]:
+            for threshold in [0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8]:
                 predictions_array, predictions_list = get_predictions_as_array(image_ids, predictions, num_classes, threshold)
 
                 print('threshold: {}'.format(threshold))
