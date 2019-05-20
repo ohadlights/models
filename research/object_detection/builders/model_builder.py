@@ -68,6 +68,7 @@ SSD_FEATURE_EXTRACTOR_CLASS_MAP = {
     'ssd_mobilenet_v1_ppn': SSDMobileNetV1PpnFeatureExtractor,
     'ssd_mobilenet_v2': SSDMobileNetV2FeatureExtractor,
     'ssd_mobilenet_v2_fpn': SSDMobileNetV2FpnFeatureExtractor,
+    'ssd_resnet17_v1_fpn': ssd_resnet_v1_fpn.SSDResnet17V1FpnFeatureExtractor,
     'ssd_resnet20_v1_fpn': ssd_resnet_v1_fpn.SSDResnet20V1FpnFeatureExtractor,
     'ssd_resnet38_v1_fpn': ssd_resnet_v1_fpn.SSDResnet38V1FpnFeatureExtractor,
     'ssd_resnet50_v1_fpn': ssd_resnet_v1_fpn.SSDResnet50V1FpnFeatureExtractor,
