@@ -84,9 +84,23 @@ def process_list_fddb(path, writer):
         i += 1
         faces = []
         for i in range(i, i + num_boxes):
-            faces += [[float(a) for a in content[i].split()[:5]]]
+            face = [float(a) for a in content[i].split()[:5]]
+            major_axis_radius, minor_axis_radius, angle, center_x, center_y = face
+            face = [center_x - minor_axis_radius,
+                    center_y - major_axis_radius,
+                    minor_axis_radius * 2,
+                    major_axis_radius * 2]
+            faces += [face]
         i += 1
         examples += [(path, faces)]
+
+        import cv2
+        image = cv2.imread(path)
+        for f in faces:
+            f = [int(a) for a in f]
+            image = cv2.rectangle(image, (f[0], f[1]), (f[0] + f[2], f[1] + f[3]), (0, 255, 0), 2)
+        cv2.imshow('', image)
+        cv2.waitKey()
 
     for example in tqdm(examples):
         tf_example = create_tf_example(example)
@@ -94,8 +108,8 @@ def process_list_fddb(path, writer):
 
 
 def main():
-    writer = tf.python_io.TFRecordWriter(r'X:\IJB-C\NIST_11\tf_object_detection_api\records\wider_face_fddb\widerface_fddb_train.record')
-    process_list_wider(r'X:\wider-face\wider_face_split\wider_face_train_bbx_gt.txt', writer)
+    writer = tf.python_io.TFRecordWriter(r'X:\IJB-C\NIST_11\tf_object_detection_api\records\wider_face_fddb\widerface_fddb_train___TEMP.record')
+    # process_list_wider(r'X:\wider-face\wider_face_split\wider_face_train_bbx_gt.txt', writer)
     process_list_fddb(r'X:\fddb\FDDB-folds\FDDB-all_ellipseList.txt', writer)
     writer.close()
 
