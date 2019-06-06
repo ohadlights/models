@@ -23,6 +23,7 @@ from absl import flags
 import tensorflow.compat.v1 as tf
 
 from object_detection import model_lib
+from object_detection.eval_hooks import EvalHook
 
 flags.DEFINE_string(
     'model_dir', None, 'Path to output model directory '
@@ -87,7 +88,8 @@ def main(unused_argv):
       estimator.evaluate(input_fn,
                          steps=None,
                          checkpoint_path=tf.train.latest_checkpoint(
-                             FLAGS.checkpoint_dir))
+                             FLAGS.checkpoint_dir),
+                         hooks=[EvalHook()])
     else:
       model_lib.continuous_eval(estimator, FLAGS.checkpoint_dir, input_fn,
                                 train_steps, name, FLAGS.max_eval_retries)
