@@ -18,6 +18,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+import argparse
+
 from absl import flags
 
 import tensorflow as tf
@@ -57,9 +60,32 @@ flags.DEFINE_boolean(
 FLAGS = flags.FLAGS
 
 
+def get_args_file():
+    if os.environ.get('ARGS_FILE') is not None:
+        return os.environ.get('ARGS_FILE')
+    if os.path.exists('/home/cdsw/train/params.txt'):
+        return '/home/cdsw/train/params.txt'
+    return None
+
+
+def update_flags_from_file():
+    args_path = get_args_file()
+    if args_path:
+        p = argparse.ArgumentParser()
+        p.add_argument('--model_dir')
+        p.add_argument('--pipeline_config_path')
+        cmd_args_array = [line.strip() for line in open(args_path).readlines()]
+        args = p.parse_args(cmd_args_array)
+        if args.model_dir:
+            FLAGS.model_dir = args.model_dir
+        if args.pipeline_config_path:
+            FLAGS.pipeline_config_path = args.pipeline_config_path
+
+
 def main(unused_argv):
   flags.mark_flag_as_required('model_dir')
   flags.mark_flag_as_required('pipeline_config_path')
+  update_flags_from_file()
   config = tf.estimator.RunConfig(model_dir=FLAGS.model_dir)
 
   train_and_eval_dict = model_lib.create_estimator_and_inputs(
