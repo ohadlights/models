@@ -71,14 +71,17 @@ def get_args_file():
 def update_flags_from_file():
     args_path = get_args_file()
     if args_path:
+        tf.logging.info('loading params from {}'.format(args_path))
         p = argparse.ArgumentParser()
         p.add_argument('--model_dir')
         p.add_argument('--pipeline_config_path')
         cmd_args_array = [line.strip() for line in open(args_path).readlines()]
         args = p.parse_args(cmd_args_array)
         if args.model_dir:
+            tf.logging.info('setting model_dir = {}'.format(args.model_dir))
             FLAGS.model_dir = args.model_dir
         if args.pipeline_config_path:
+            tf.logging.info('setting pipeline_config_path = {}'.format(args.pipeline_config_path))
             FLAGS.pipeline_config_path = args.pipeline_config_path
 
 
