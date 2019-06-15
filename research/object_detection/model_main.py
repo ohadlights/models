@@ -57,6 +57,7 @@ flags.DEFINE_boolean(
     'run_once', False, 'If running in eval-only mode, whether to run just '
     'one round of eval vs running continuously (default).'
 )
+flags.DEFINE_integer('throttle_secs', 600, 'min secs between evaluations')
 FLAGS = flags.FLAGS
 
 
@@ -75,6 +76,7 @@ def update_flags_from_file():
         p = argparse.ArgumentParser()
         p.add_argument('--model_dir')
         p.add_argument('--pipeline_config_path')
+        p.add_argument('--throttle_secs', type=int)
         cmd_args_array = [line.strip() for line in open(args_path).readlines()]
         args = p.parse_args(cmd_args_array)
         if args.model_dir:
@@ -83,6 +85,9 @@ def update_flags_from_file():
         if args.pipeline_config_path:
             tf.logging.info('setting pipeline_config_path = {}'.format(args.pipeline_config_path))
             FLAGS.pipeline_config_path = args.pipeline_config_path
+        if args.throttle_secs:
+            tf.logging.info('setting throttle_secs = {}'.format(args.throttle_secs))
+            FLAGS.throttle_secs = args.throttle_secs
 
 
 def main(unused_argv):
@@ -130,7 +135,8 @@ def main(unused_argv):
         eval_on_train_input_fn,
         predict_input_fn,
         train_steps,
-        eval_on_train_data=False)
+        eval_on_train_data=False,
+        throttle_secs=FLAGS.throttle_secs)
 
     # Currently only a single Eval Spec is allowed.
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_specs[0])
