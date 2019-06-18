@@ -57,6 +57,7 @@ flags.DEFINE_boolean(
     'run_once', False, 'If running in eval-only mode, whether to run just '
     'one round of eval vs running continuously (default).'
 )
+flags.DEFINE_integer('eval_delay_sec', 600, 'dont run eval before x seconds from start')
 flags.DEFINE_integer('throttle_secs', 600, 'min secs between evaluations')
 FLAGS = flags.FLAGS
 
@@ -76,6 +77,7 @@ def update_flags_from_file():
         p = argparse.ArgumentParser()
         p.add_argument('--model_dir')
         p.add_argument('--pipeline_config_path')
+        p.add_argument('--eval_delay_sec', type=int)
         p.add_argument('--throttle_secs', type=int)
         cmd_args_array = [line.strip() for line in open(args_path).readlines()]
         args = p.parse_args(cmd_args_array)
@@ -85,6 +87,9 @@ def update_flags_from_file():
         if args.pipeline_config_path:
             tf.logging.info('setting pipeline_config_path = {}'.format(args.pipeline_config_path))
             FLAGS.pipeline_config_path = args.pipeline_config_path
+        if args.eval_delay_sec:
+            tf.logging.info('setting eval_delay_sec = {}'.format(args.eval_delay_sec))
+            FLAGS.eval_delay_sec = args.eval_delay_sec
         if args.throttle_secs:
             tf.logging.info('setting throttle_secs = {}'.format(args.throttle_secs))
             FLAGS.throttle_secs = args.throttle_secs
