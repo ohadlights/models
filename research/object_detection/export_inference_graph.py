@@ -97,6 +97,8 @@ python export_inference_graph \
               } \
             }"
 """
+import os
+
 import tensorflow as tf
 from google.protobuf import text_format
 from object_detection import exporter
@@ -135,6 +137,8 @@ FLAGS = flags.FLAGS
 
 
 def main(_):
+  if not os.path.exists(FLAGS.output_directory):
+    os.mkdir(FLAGS.output_directory)
   pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
   with tf.gfile.GFile(FLAGS.pipeline_config_path, 'r') as f:
     text_format.Merge(f.read(), pipeline_config)
