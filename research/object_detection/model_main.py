@@ -141,6 +141,7 @@ def main(unused_argv):
         predict_input_fn,
         train_steps,
         eval_on_train_data=False,
+        eval_delay_sec=FLAGS.eval_delay_sec,
         throttle_secs=FLAGS.throttle_secs)
 
     # Currently only a single Eval Spec is allowed.

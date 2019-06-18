@@ -717,6 +717,7 @@ def create_train_and_eval_specs(train_input_fn,
                                 eval_on_train_data=False,
                                 final_exporter_name='Servo',
                                 eval_spec_names=None,
+                                eval_delay_sec=600,
                                 throttle_secs=600):
   """Creates a `TrainSpec` and `EvalSpec`s.
 
@@ -761,6 +762,7 @@ def create_train_and_eval_specs(train_input_fn,
             input_fn=eval_input_fn,
             steps=None,
             exporters=exporter,
+            eval_delay_sec=eval_delay_sec,
             throttle_secs=throttle_secs))
 
   if eval_on_train_data:
