@@ -754,7 +754,7 @@ def create_train_and_eval_specs(train_input_fn,
             input_fn=eval_input_fn,
             steps=None,
             exporters=exporter,
-            eval_delay_sec=eval_delay_sec,
+            start_delay_secs=eval_delay_sec,
             throttle_secs=throttle_secs))
 
   if eval_on_train_data:
