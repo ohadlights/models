@@ -40,7 +40,8 @@ class SSDMobileNetV2FeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
                reuse_weights=None,
                use_explicit_padding=False,
                use_depthwise=False,
-               override_base_feature_extractor_hyperparams=False):
+               override_base_feature_extractor_hyperparams=False,
+               num_layers=6):
     """MobileNetV2 Feature Extractor for SSD Models.
 
     Mobilenet v2 (experimental), designed by sandler@. More details can be found
@@ -74,6 +75,7 @@ class SSDMobileNetV2FeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
         use_depthwise=use_depthwise,
         override_base_feature_extractor_hyperparams=
         override_base_feature_extractor_hyperparams)
+    self._num_layers = num_layers
 
   def preprocess(self, resized_inputs):
     """SSD preprocessing.
@@ -111,6 +113,10 @@ class SSDMobileNetV2FeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
         'use_explicit_padding': self._use_explicit_padding,
     }
 
+    if self._num_layers == 7:
+        feature_map_layout['from_layer'] += ['']
+        feature_map_layout['layer_depth'] += [64]
+
     with tf.variable_scope('MobilenetV2', reuse=self._reuse_weights) as scope:
       with slim.arg_scope(
           mobilenet_v2.training_scope(is_training=None, bn_decay=0.9997)), \
@@ -134,3 +140,11 @@ class SSDMobileNetV2FeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
               image_features=image_features)
 
     return feature_maps.values()
+
+
+class SSDMobileNetV2FeatureExtractorFactory:
+    def __init__(self, num_layers=6):
+        self._num_layers = num_layers
+
+    def __call__(self, *args, **kwargs):
+        return SSDMobileNetV2FeatureExtractor(num_layers=self._num_layers, *args, **kwargs)
