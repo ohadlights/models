@@ -32,6 +32,9 @@ message Hyperparams {
 
     // Use tf.nn.relu6
     RELU_6 = 2;
+
+    // Use tf.nn.swish ? or custom func for swish_h
+    SWISH_H = 3;
   }
   optional Activation activation = 4 [default = RELU];
 

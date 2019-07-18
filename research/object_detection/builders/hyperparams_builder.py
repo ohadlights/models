@@ -19,6 +19,7 @@ import tensorflow as tf
 from object_detection.core import freezable_batch_norm
 from object_detection.protos import hyperparams_pb2
 from object_detection.utils import context_manager
+from object_detection.core.activations import hswish
 
 slim = tf.contrib.slim
 
@@ -256,6 +257,8 @@ def _build_activation_fn(activation_fn):
     return tf.nn.relu
   if activation_fn == hyperparams_pb2.Hyperparams.RELU_6:
     return tf.nn.relu6
+  if activation_fn == hyperparams_pb2.Hyperparams.SWISH_H:
+      return hswish
   raise ValueError('Unknown activation function: {}'.format(activation_fn))
 
 
