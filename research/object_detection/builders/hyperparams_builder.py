@@ -20,6 +20,7 @@ import tf_slim as slim
 from object_detection.core import freezable_batch_norm
 from object_detection.protos import hyperparams_pb2
 from object_detection.utils import context_manager
+from object_detection.core.activations import hswish
 
 # pylint: enable=g-import-not-at-top
 
@@ -268,6 +269,8 @@ def _build_activation_fn(activation_fn):
     return tf.nn.relu6
   if activation_fn == hyperparams_pb2.Hyperparams.SWISH:
     return tf.nn.swish
+  if activation_fn == hyperparams_pb2.Hyperparams.SWISH_H:
+      return hswish
   raise ValueError('Unknown activation function: {}'.format(activation_fn))
 
 
