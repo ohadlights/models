@@ -21,6 +21,34 @@ import tensorflow as tf
 slim = tf.contrib.slim
 
 
+def global_average_pooling(x):
+    with tf.variable_scope('global_average_pooling'):
+        return tf.reduce_mean(x, [1, 2])
+
+
+def hsigmoid(x):
+    """
+    hard sigmoid. Ref: https://arxiv.org/pdf/1905.02244.pdf
+    :param x: input tensor
+    :return: tensor applied hard sigmoid activation
+    """
+    return tf.nn.relu6(x + 3) / 6
+
+
+def squeeze_excitation_layer(input_x, out_dim, ratio=4, final_activation=hsigmoid):
+    squeeze = global_average_pooling(input_x)
+
+    excitation = tf.layers.dense(inputs=squeeze, use_bias=False, units=out_dim / ratio)
+    excitation = tf.nn.relu(excitation)
+    excitation = tf.layers.dense(inputs=excitation, use_bias=False, units=out_dim)
+    excitation = final_activation(excitation)
+
+    excitation = tf.reshape(excitation, [-1, 1, 1, out_dim])
+    scale = input_x * excitation
+
+    return scale
+
+
 def _fixed_padding(inputs, kernel_size, rate=1):
   """Pads the input along the spatial dimensions independently of input size.
 
@@ -178,7 +206,8 @@ def expanded_conv(input_tensor,
                   endpoints=None,
                   use_explicit_padding=False,
                   padding='SAME',
-                  scope=None):
+                  scope=None,
+                  add_se=False):
   """Depthwise Convolution Block with expansion.
 
   Builds a composite convolution that has the following structure
@@ -287,6 +316,8 @@ def expanded_conv(input_tensor,
       endpoints['depthwise_output'] = net
     if expansion_transform:
       net = expansion_transform(expansion_tensor=net, input_tensor=input_tensor)
+    if add_se:
+      net = squeeze_excitation_layer(net, inner_size)
     # Note in contrast with expansion, we always have
     # projection to produce the desired output size.
     net = split_conv(
