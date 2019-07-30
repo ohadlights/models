@@ -37,6 +37,8 @@ op = lib.op
 
 expand_input = ops.expand_input_by_factor
 
+add_se = False
+
 # pyformat: disable
 # Architecture: https://arxiv.org/abs/1801.04381
 V3_DEF = dict(
@@ -61,22 +63,22 @@ V3_DEF = dict(
            expansion_size=expand_input(1, divisible_by=1),
            num_outputs=16,
            add_se=True),
-        op(ops.expanded_conv, stride=2, num_outputs=24, add_se=True, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=24, add_se=True),
-        op(ops.expanded_conv, stride=2, num_outputs=32, add_se=True, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=32, add_se=True),
-        op(ops.expanded_conv, stride=1, num_outputs=32, add_se=True),
-        op(ops.expanded_conv, stride=2, num_outputs=64, add_se=True, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=True, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=True),
-        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=True),
-        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=True),
-        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=True),
-        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=True),
-        op(ops.expanded_conv, stride=2, num_outputs=160, add_se=True, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=160, add_se=True, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=160, add_se=True),
-        op(ops.expanded_conv, stride=1, num_outputs=320, add_se=True),
+        op(ops.expanded_conv, stride=2, num_outputs=24, add_se=add_se, kernel_size=(5, 5)),
+        op(ops.expanded_conv, stride=1, num_outputs=24, add_se=add_se),
+        op(ops.expanded_conv, stride=2, num_outputs=32, add_se=add_se, kernel_size=(5, 5)),
+        op(ops.expanded_conv, stride=1, num_outputs=32, add_se=add_se),
+        op(ops.expanded_conv, stride=1, num_outputs=32, add_se=add_se),
+        op(ops.expanded_conv, stride=2, num_outputs=64, add_se=add_se, kernel_size=(5, 5)),
+        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se, kernel_size=(5, 5)),
+        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se),
+        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se),
+        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
+        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
+        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
+        op(ops.expanded_conv, stride=2, num_outputs=160, add_se=add_se, kernel_size=(5, 5)),
+        op(ops.expanded_conv, stride=1, num_outputs=160, add_se=add_se, kernel_size=(5, 5)),
+        op(ops.expanded_conv, stride=1, num_outputs=160, add_se=add_se),
+        op(ops.expanded_conv, stride=1, num_outputs=320, add_se=add_se),
         op(slim.conv2d, stride=1, kernel_size=[1, 1], num_outputs=1280)
     ],
 )
