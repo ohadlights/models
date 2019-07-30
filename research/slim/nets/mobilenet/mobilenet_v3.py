@@ -37,52 +37,53 @@ op = lib.op
 
 expand_input = ops.expand_input_by_factor
 
-add_se = False
 
-# pyformat: disable
-# Architecture: https://arxiv.org/abs/1801.04381
-V3_DEF = dict(
-    defaults={
-        # Note: these parameters of batch norm affect the architecture
-        # that's why they are here and not in training_scope.
-        (slim.batch_norm,): {'center': True, 'scale': True},
-        (slim.conv2d, slim.fully_connected, slim.separable_conv2d): {
-            'normalizer_fn': slim.batch_norm, 'activation_fn': tf.nn.relu6
+def get_architecture(add_se):
+    # pyformat: disable
+    # Architecture: https://arxiv.org/abs/1801.04381
+    V3_DEF = dict(
+        defaults={
+            # Note: these parameters of batch norm affect the architecture
+            # that's why they are here and not in training_scope.
+            (slim.batch_norm,): {'center': True, 'scale': True},
+            (slim.conv2d, slim.fully_connected, slim.separable_conv2d): {
+                'normalizer_fn': slim.batch_norm, 'activation_fn': tf.nn.relu6
+            },
+            (ops.expanded_conv,): {
+                'expansion_size': expand_input(6),
+                'split_expansion': 1,
+                'normalizer_fn': slim.batch_norm,
+                'residual': True
+            },
+            (slim.conv2d, slim.separable_conv2d): {'padding': 'SAME'}
         },
-        (ops.expanded_conv,): {
-            'expansion_size': expand_input(6),
-            'split_expansion': 1,
-            'normalizer_fn': slim.batch_norm,
-            'residual': True
-        },
-        (slim.conv2d, slim.separable_conv2d): {'padding': 'SAME'}
-    },
-    spec=[
-        op(slim.conv2d, stride=2, num_outputs=32, kernel_size=[5, 5]),
-        op(ops.expanded_conv,
-           expansion_size=expand_input(1, divisible_by=1),
-           num_outputs=16,
-           add_se=True),
-        op(ops.expanded_conv, stride=2, num_outputs=24, add_se=add_se, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=24, add_se=add_se),
-        op(ops.expanded_conv, stride=2, num_outputs=32, add_se=add_se, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=32, add_se=add_se),
-        op(ops.expanded_conv, stride=1, num_outputs=32, add_se=add_se),
-        op(ops.expanded_conv, stride=2, num_outputs=64, add_se=add_se, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se),
-        op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se),
-        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
-        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
-        op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
-        op(ops.expanded_conv, stride=2, num_outputs=160, add_se=add_se, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=160, add_se=add_se, kernel_size=(5, 5)),
-        op(ops.expanded_conv, stride=1, num_outputs=160, add_se=add_se),
-        op(ops.expanded_conv, stride=1, num_outputs=320, add_se=add_se),
-        op(slim.conv2d, stride=1, kernel_size=[1, 1], num_outputs=1280)
-    ],
-)
-# pyformat: enable
+        spec=[
+            op(slim.conv2d, stride=2, num_outputs=32, kernel_size=[5, 5]),
+            op(ops.expanded_conv,
+               expansion_size=expand_input(1, divisible_by=1),
+               num_outputs=16,
+               add_se=True),
+            op(ops.expanded_conv, stride=2, num_outputs=24, add_se=add_se, kernel_size=(5, 5)),
+            op(ops.expanded_conv, stride=1, num_outputs=24, add_se=add_se),
+            op(ops.expanded_conv, stride=2, num_outputs=32, add_se=add_se, kernel_size=(5, 5)),
+            op(ops.expanded_conv, stride=1, num_outputs=32, add_se=add_se),
+            op(ops.expanded_conv, stride=1, num_outputs=32, add_se=add_se),
+            op(ops.expanded_conv, stride=2, num_outputs=64, add_se=add_se, kernel_size=(5, 5)),
+            op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se, kernel_size=(5, 5)),
+            op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se),
+            op(ops.expanded_conv, stride=1, num_outputs=64, add_se=add_se),
+            op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
+            op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
+            op(ops.expanded_conv, stride=1, num_outputs=96, add_se=add_se),
+            op(ops.expanded_conv, stride=2, num_outputs=160, add_se=add_se, kernel_size=(5, 5)),
+            op(ops.expanded_conv, stride=1, num_outputs=160, add_se=add_se, kernel_size=(5, 5)),
+            op(ops.expanded_conv, stride=1, num_outputs=160, add_se=add_se),
+            op(ops.expanded_conv, stride=1, num_outputs=320, add_se=add_se),
+            op(slim.conv2d, stride=1, kernel_size=[1, 1], num_outputs=1280)
+        ],
+    )
+    # pyformat: enable
+    return V3_DEF
 
 
 @slim.add_arg_scope
@@ -95,6 +96,7 @@ def mobilenet(input_tensor,
               min_depth=None,
               divisible_by=None,
               activation_fn=None,
+              squeeze_excitation=False,
               **kwargs):
   """Creates mobilenet V3 network.
 
@@ -122,6 +124,7 @@ def mobilenet(input_tensor,
     will be divisible by this number.
     activation_fn: Activation function to use, defaults to tf.nn.relu6 if not
       specified.
+    squeeze_excitation: Use squeeze-and-excitation at the end of each block
     **kwargs: passed directly to mobilenet.mobilenet:
       prediction_fn- what prediction function to use.
       reuse-: whether to reuse variables (if reuse set to true, scope
@@ -133,7 +136,7 @@ def mobilenet(input_tensor,
     ValueError: On invalid arguments
   """
   if conv_defs is None:
-    conv_defs = V3_DEF
+    conv_defs = get_architecture(squeeze_excitation)
   if 'multiplier' in kwargs:
     raise ValueError('mobilenetv3 doesn\'t support generic '
                      'multiplier parameter use "depth_multiplier" instead.')
@@ -185,11 +188,13 @@ mobilenet_v3_035 = wrapped_partial(mobilenet, depth_multiplier=0.35,
 
 
 @slim.add_arg_scope
-def mobilenet_base(input_tensor, depth_multiplier=1.0, **kwargs):
+def mobilenet_base(input_tensor, depth_multiplier=1.0, squeeze_excitation=False, **kwargs):
   """Creates base of the mobilenet (no pooling and no logits) ."""
   return mobilenet(input_tensor,
                    depth_multiplier=depth_multiplier,
-                   base_only=True, **kwargs)
+                   base_only=True,
+                   squeeze_excitation=squeeze_excitation,
+                   **kwargs)
 
 
 def training_scope(**kwargs):
@@ -215,4 +220,4 @@ def training_scope(**kwargs):
   return lib.training_scope(**kwargs)
 
 
-__all__ = ['training_scope', 'mobilenet_base', 'mobilenet', 'V3_DEF']
+__all__ = ['training_scope', 'mobilenet_base', 'mobilenet', 'get_architecture']

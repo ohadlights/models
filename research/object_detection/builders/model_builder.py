@@ -169,6 +169,7 @@ def _build_ssd_feature_extractor(feature_extractor_config,
   is_keras_extractor = feature_type in SSD_KERAS_FEATURE_EXTRACTOR_CLASS_MAP
   depth_multiplier = feature_extractor_config.depth_multiplier
   min_depth = feature_extractor_config.min_depth
+  squeeze_excitation = feature_extractor_config.squeeze_excitation
   pad_to_multiple = feature_extractor_config.pad_to_multiple
   use_explicit_padding = feature_extractor_config.use_explicit_padding
   use_depthwise = feature_extractor_config.use_depthwise
@@ -235,6 +236,10 @@ def _build_ssd_feature_extractor(feature_extractor_config,
         'additional_layer_depth':
             feature_extractor_config.fpn.additional_layer_depth,
     })
+
+  if feature_extractor_config.type == 'ssd_mobilenet_v3':
+      kwargs.update({'squeeze_excitation':
+                         squeeze_excitation})
 
   return feature_extractor_class(**kwargs)
 

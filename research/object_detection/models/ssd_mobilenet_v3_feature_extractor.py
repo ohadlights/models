@@ -41,7 +41,8 @@ class SSDMobileNetV3FeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
                use_explicit_padding=False,
                use_depthwise=False,
                override_base_feature_extractor_hyperparams=False,
-               num_layers=6):
+               num_layers=6,
+               squeeze_excitation=False):
     """MobileNetV3 Feature Extractor for SSD Models.
 
     Mobilenet v3 (experimental), designed by sandler@. More details can be found
@@ -76,6 +77,7 @@ class SSDMobileNetV3FeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
         override_base_feature_extractor_hyperparams=
         override_base_feature_extractor_hyperparams)
     self._num_layers = num_layers
+    self._squeeze_excitation = squeeze_excitation
 
   def preprocess(self, resized_inputs):
     """SSD preprocessing.
@@ -130,6 +132,7 @@ class SSDMobileNetV3FeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
               final_endpoint='layer_19',
               depth_multiplier=self._depth_multiplier,
               use_explicit_padding=self._use_explicit_padding,
+              squeeze_excitation=self._squeeze_excitation,
               scope=scope)
         with slim.arg_scope(self._conv_hyperparams_fn()):
           feature_maps = feature_map_generators.multi_resolution_feature_maps(
