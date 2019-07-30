@@ -157,6 +157,9 @@ message SsdFeatureExtractor {
   // Minimum number of the channels in the feature extractor.
   optional int32 min_depth = 3 [default = 16];
 
+  // If to add squeeze-and-excitation layer at the end of each block of the features extractor
+  optional bool squeeze_excitation = 12 [default = false];
+
   // Hyperparameters that affect the layers of feature extractor added on top
   // of the base feature extractor.
   optional Hyperparams conv_hyperparams = 4;
