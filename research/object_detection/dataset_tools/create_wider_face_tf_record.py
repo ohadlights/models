@@ -1,15 +1,19 @@
-import io
 import os
 
 import cv2
 from tqdm import tqdm
 import tensorflow as tf
 
+import contextlib2
 from object_detection.utils import dataset_util
+from object_detection.dataset_tools import tf_record_creation_util
+
+
+total_faces = 0
+num_filtered = 0
 
 
 def create_tf_example(example):
-
     path, boxes = example
 
     height, width = cv2.imread(path).shape[:2]
@@ -29,10 +33,20 @@ def create_tf_example(example):
 
     for box in boxes:
         box = [float(a) for a in box]
-        xmins += [box[0] / float(width)]
-        xmaxs += [(box[0] + box[2]) / float(width)]
-        ymins += [box[1] / float(height)]
-        ymaxs += [(box[1] + box[3]) / float(height)]
+        box = [box[0] / float(width),
+               box[1] / float(height),
+               (box[0] + box[2]) / float(width),
+               (box[1] + box[3]) / float(height)]
+        box = [
+            max(0., box[0]),
+            max(0., box[1]),
+            min(1., box[2]),
+            min(1., box[3])
+        ]
+        xmins += [box[0]]
+        xmaxs += [box[2]]
+        ymins += [box[1]]
+        ymaxs += [box[3]]
         classes_text += [b'face']
         classes += [1]
 
@@ -53,8 +67,9 @@ def create_tf_example(example):
     return tf_example
 
 
-def process_list(path, output_path):
-    writer = tf.python_io.TFRecordWriter(output_path)
+def process_list(path, output_path, num_shards, min_size):
+    global total_faces
+    global num_filtered
 
     content = [l.strip() for l in open(path)]
     examples = []
@@ -66,22 +81,35 @@ def process_list(path, output_path):
         i += 1
         boxes = []
         for i in range(i, i + num_boxes):
-            boxes += [[int(a) for a in content[i].split()[:4]]]
+            total_faces += 1
+            box = [int(a) for a in content[i].split()[:4]]
+            if (min_size == 0) or (box[2] > min_size and box[3] > min_size):
+                boxes += [box]
+            else:
+                num_filtered += 1
         i += 1
         examples += [(path, boxes)]
 
-    for example in tqdm(examples):
-        tf_example = create_tf_example(example)
-        writer.write(tf_example.SerializeToString())
-
-    writer.close()
+    with contextlib2.ExitStack() as tf_record_close_stack:
+        output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
+            tf_record_close_stack, output_path, num_shards)
+        for index, example in tqdm(enumerate(examples), total=len(examples)):
+            tf_example = create_tf_example(example)
+            output_shard_index = index % num_shards
+            output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
 
 
 def main():
+    min_size = 5
     process_list(r'X:\wider-face\wider_face_split\wider_face_train_bbx_gt.txt',
-                 r'D:\Projects\Nist\tf_object_detection_api\wider_face\records\wider_face_train.record')
+                 r'X:\IJB-C\NIST_11\tf_object_detection_api\records\wider_face\wider_face_train{}.record'.format('' if min_size == 0 else '_filter{}'.format(min_size)),
+                 num_shards=5,
+                 min_size=min_size)
     process_list(r'X:\wider-face\wider_face_split\wider_face_val_bbx_gt.txt',
-                 r'D:\Projects\Nist\tf_object_detection_api\wider_face\records\wider_face_val.record')
+                 r'X:\IJB-C\NIST_11\tf_object_detection_api\records\wider_face\wider_face_val{}.record'.format('' if min_size == 0 else '_filter{}'.format(min_size)),
+                 num_shards=2,
+                 min_size=min_size)
+    print('filtered {}/{}'.format(num_filtered, total_faces))
 
 
 if __name__ == '__main__':
