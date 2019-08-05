@@ -67,7 +67,7 @@ def create_tf_example(example):
     return tf_example
 
 
-def process_list(path, output_path, num_shards, min_size):
+def process_list(path, output_path, num_shards, min_size, do_write=True):
     global total_faces
     global num_filtered
 
@@ -90,13 +90,16 @@ def process_list(path, output_path, num_shards, min_size):
         i += 1
         examples += [(path, boxes)]
 
-    with contextlib2.ExitStack() as tf_record_close_stack:
-        output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
-            tf_record_close_stack, output_path, num_shards)
-        for index, example in tqdm(enumerate(examples), total=len(examples)):
-            tf_example = create_tf_example(example)
-            output_shard_index = index % num_shards
-            output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
+    if do_write:
+        with contextlib2.ExitStack() as tf_record_close_stack:
+            output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
+                tf_record_close_stack, output_path, num_shards)
+            for index, example in tqdm(enumerate(examples), total=len(examples)):
+                tf_example = create_tf_example(example)
+                output_shard_index = index % num_shards
+                output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
+    else:
+        return examples
 
 
 def main():
