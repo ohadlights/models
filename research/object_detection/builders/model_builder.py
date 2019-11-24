@@ -38,9 +38,7 @@ from object_detection.models import faster_rcnn_inception_v2_feature_extractor a
 from object_detection.models import faster_rcnn_nas_feature_extractor as frcnn_nas
 from object_detection.models import faster_rcnn_pnas_feature_extractor as frcnn_pnas
 from object_detection.models import faster_rcnn_resnet_v1_feature_extractor as frcnn_resnet_v1
-from object_detection.models import ssd_resnet_v1_fpn_feature_extractor as ssd_resnet_v1_fpn
 from object_detection.models import ssd_resnet_v1_fpn_keras_feature_extractor as ssd_resnet_v1_fpn_keras
-from object_detection.models.ssd_resnet_v1_feature_extractor import SSDResnet26V1FeatureExtractor
 from object_detection.models import ssd_resnet_v1_fpn_feature_extractor as ssd_resnet_v1_fpn
 from object_detection.models import ssd_resnet_v1_ppn_feature_extractor as ssd_resnet_v1_ppn
 from object_detection.models.embedded_ssd_mobilenet_v1_feature_extractor import EmbeddedSSDMobileNetV1FeatureExtractor
@@ -53,9 +51,7 @@ from object_detection.models.ssd_mobilenet_v1_fpn_keras_feature_extractor import
 from object_detection.models.ssd_mobilenet_v1_keras_feature_extractor import SSDMobileNetV1KerasFeatureExtractor
 from object_detection.models.ssd_mobilenet_v1_ppn_feature_extractor import SSDMobileNetV1PpnFeatureExtractor
 from object_detection.models.ssd_mobilenet_v2_feature_extractor import SSDMobileNetV2FeatureExtractor
-from object_detection.models.ssd_mobilenet_v2_feature_extractor import SSDMobileNetV2FeatureExtractorFactory
 from object_detection.models.ssd_mobilenet_v2_fpn_feature_extractor import SSDMobileNetV2FpnFeatureExtractor
-from object_detection.models.ssd_mobilenet_v3_feature_extractor import SSDMobileNetV3FeatureExtractor
 from object_detection.models.ssd_mobilenet_v2_fpn_keras_feature_extractor import SSDMobileNetV2FpnKerasFeatureExtractor
 from object_detection.models.ssd_mobilenet_v2_keras_feature_extractor import SSDMobileNetV2KerasFeatureExtractor
 from object_detection.models.ssd_mobilenet_v3_feature_extractor import SSDMobileNetV3LargeFeatureExtractor
@@ -75,16 +71,10 @@ SSD_FEATURE_EXTRACTOR_CLASS_MAP = {
     'ssd_mobilenet_v1_fpn': SSDMobileNetV1FpnFeatureExtractor,
     'ssd_mobilenet_v1_ppn': SSDMobileNetV1PpnFeatureExtractor,
     'ssd_mobilenet_v2': SSDMobileNetV2FeatureExtractor,
-    'ssd_mobilenet_v2_7': SSDMobileNetV2FeatureExtractorFactory(num_layers=7),
     'ssd_mobilenet_v2_fpn': SSDMobileNetV2FpnFeatureExtractor,
     'ssd_mobilenet_v3_large': SSDMobileNetV3LargeFeatureExtractor,
     'ssd_mobilenet_v3_small': SSDMobileNetV3SmallFeatureExtractor,
     'ssd_mobilenet_edgetpu': SSDMobileNetEdgeTPUFeatureExtractor,
-    'ssd_resnet17_v1_fpn': ssd_resnet_v1_fpn.SSDResnet17V1FpnFeatureExtractor,
-    'ssd_resnet20_v1_fpn': ssd_resnet_v1_fpn.SSDResnet20V1FpnFeatureExtractor,
-    'ssd_resnet38_v1_fpn': ssd_resnet_v1_fpn.SSDResnet38V1FpnFeatureExtractor,
-    'ssd_mobilenet_v3': SSDMobileNetV3FeatureExtractor,
-    'ssd_resnet26_v1': SSDResnet26V1FeatureExtractor,
     'ssd_resnet50_v1_fpn': ssd_resnet_v1_fpn.SSDResnet50V1FpnFeatureExtractor,
     'ssd_resnet101_v1_fpn': ssd_resnet_v1_fpn.SSDResnet101V1FpnFeatureExtractor,
     'ssd_resnet152_v1_fpn': ssd_resnet_v1_fpn.SSDResnet152V1FpnFeatureExtractor,
