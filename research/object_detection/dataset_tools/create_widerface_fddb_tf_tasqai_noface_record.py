@@ -1,3 +1,5 @@
+import os
+
 import cv2
 from tqdm import tqdm
 
@@ -18,10 +20,19 @@ def process_list_noface(path):
     return examples
 
 
+def add_files_from_directory(path):
+    paths = [os.path.join(path, file) for file in os.listdir(path)]
+    examples = []
+    for p in tqdm(paths):
+        if cv2.imread(p) is not None:
+            examples += [(p, [])]
+    return examples
+
+
 def main():
     num_shards = 5
-    min_size = 20
-    output_path = r'X:\IJB-C\NIST_11\tf_object_detection_api\records\wider_face_fddb_tasqai_noface\widerface_fddb_tasqai_noface_train{}.record'\
+    min_size = 10
+    output_path = r'X:\IJB-C\NIST_11\tf_object_detection_api\records\wider_face_fddb_tasqai_noface\widerface_fddb_tasqai_noface2_train{}.record'\
         .format('' if min_size == 0 else '_filter{}'.format(min_size))
 
     examples = []
@@ -34,6 +45,7 @@ def main():
     examples += process_list_tasqai(r'X:\IJB-C\NIST_11\tf_object_detection_api\records\tasqai\tasqai_image_annotations_bbox_train.txt',
                                     min_size=min_size)
     examples += process_list_noface(r'X:\IJB-C\NIST_11\tf_object_detection_api\records\nofaces\no_faces_list_train.txt')
+    examples += add_files_from_directory(r'X:\IJB-C\NIST_11\tf_object_detection_api\data\NoFaceTali')
 
     with contextlib2.ExitStack() as tf_record_close_stack:
         output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
